@@ -1,8 +1,11 @@
-import { comment } from "../../src/language/comment";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+import { comment } from "./comment.js";
+import { deepStrictEqual } from "node:assert";
 
 describe("parse", () => {
   it("parses single word comment", () => {
-    expect(
+    assert.deepStrictEqual(
       comment.parseToken(
         {},
         {
@@ -11,7 +14,7 @@ describe("parse", () => {
           lineNumber: 1,
         }
       )
-    ).toEqual({ isComplete: false });
+    ,{ isComplete: false });
   });
 
   it("parses multiple word comments until a new line appears", () => {
@@ -36,13 +39,13 @@ describe("parse", () => {
       text: "\n",
       lineNumber: 1,
     });
-    expect(state).toEqual({ isComplete: true });
+    deepStrictEqual(state, { isComplete: true });
   });
 });
 
 describe("perform", () => {
   it("does nothing except return the same state", () => {
     const state = { a: 123 };
-    expect(comment.perform(state)).toEqual(state);
+    deepStrictEqual(comment.perform(state), state);
   });
 });

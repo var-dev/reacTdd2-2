@@ -1,9 +1,11 @@
-export const comment = {
+
+export const comment: CommentCommand = {
   names: [";"],
   initial: {},
   isWriteProtected: true,
   parameters: [],
-  parseToken: (state, token) => {
+  parseToken: (state: LogoState, token: CommentToken): ParseResult => {
+    void state;
     if (
       token.type === "whitespace" &&
       token.text === "\n"
@@ -13,5 +15,5 @@ export const comment = {
       return { isComplete: false };
     }
   },
-  perform: (state) => state,
+  perform: (state: LogoState): LogoState => state,
 };
