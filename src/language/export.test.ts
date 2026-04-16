@@ -1,4 +1,6 @@
-import { toInstructions } from "../../src/language/export";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+import { toInstructions } from "./export.js";
 
 describe("toInstructions", () => {
   it("joins two tokens in the same instruction", () => {
@@ -8,7 +10,7 @@ describe("toInstructions", () => {
         { instructionId: 0, text: "b" },
       ],
     });
-    expect(result).toEqual(["ab"]);
+    assert.deepStrictEqual(result,["ab"]);
   });
 
   it("works for multiple instructions", () => {
@@ -18,6 +20,6 @@ describe("toInstructions", () => {
         { instructionId: 1, text: "b" },
       ],
     });
-    expect(result).toEqual(["a", "b"]);
+    assert.deepStrictEqual(result, ["a", "b"]);
   });
 });

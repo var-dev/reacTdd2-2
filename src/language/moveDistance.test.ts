@@ -1,8 +1,10 @@
+import { describe, it } from "node:test";
 import { moveDistance } from "../../src/language/moveDistance";
+import { deepStrictEqual, strictEqual } from "assert";
 
-const value = (v) => ({ get: () => v });
+const value = (v:any) => ({ get: () => v });
 
-const initialState = {
+const initialState: LogoState = {
   drawCommands: [],
   turtle: { x: 0, y: 0, angle: 0 },
   pen: { down: true },
@@ -10,21 +12,21 @@ const initialState = {
 };
 
 describe("moveDistance", () => {
-  let result;
+  let result: LogoState;
 
-  function doMove(state, distance) {
+  function doMove(state: LogoState, distance:number) {
     result = moveDistance(state, value(distance));
   }
 
   describe("when angle is 0", () => {
     it("increases turtle x", () => {
       doMove(initialState, 100);
-      expect(result.turtle.x).toEqual(100);
+      strictEqual(result.turtle.x, 100);
     });
 
     it("adds a new draw command when moving forward", () => {
       doMove(initialState, 100);
-      expect(result.drawCommands).toEqual([
+      deepStrictEqual(result.drawCommands, [
         {
           drawCommand: "drawLine",
           id: 123,
@@ -37,23 +39,18 @@ describe("moveDistance", () => {
     });
 
     it("maintains existing draw commands", () => {
-      doMove(
-        { ...initialState, drawCommands: [1, 2, 3] },
-        100
-      );
-      expect(result.drawCommands.slice(0, 3)).toEqual(
-        [1, 2, 3]
-      );
+      doMove({ ...initialState, drawCommands: [1, 2, 3] as any}, 100);
+      deepStrictEqual(result.drawCommands.slice(0, 3), [1, 2, 3]);
     });
 
     it("maintains existing turtle properties", () => {
       doMove(initialState, 100);
-      expect(result.turtle.angle).toEqual(0);
+      strictEqual(result.turtle.angle, 0);
     });
 
-    it("descreases x when moving with a negative direction", () => {
+    it("decreases x when moving with a negative direction", () => {
       doMove(initialState, -100);
-      expect(result.turtle.x).toEqual(-100);
+      strictEqual(result.turtle.x, -100);
     });
   });
 
@@ -64,13 +61,13 @@ describe("moveDistance", () => {
           ...initialState,
           turtle: { x: 0, y: 0, angle: 90 },
         },
-        100
+        100,
       );
-      expect(result.turtle.y).toEqual(100);
+      strictEqual(result.turtle.y, 100);
     });
   });
 
-  const radians = (angle) => (Math.PI * angle) / 180;
+  const radians = (angle: number) => (Math.PI * angle) / 180;
   describe("when angle is 30", () => {
     it("uses cos to calculate x", () => {
       doMove(
@@ -78,11 +75,9 @@ describe("moveDistance", () => {
           ...initialState,
           turtle: { x: 0, y: 0, angle: 30 },
         },
-        100
+        100,
       );
-      expect(result.turtle.x).toEqual(
-        Math.cos(radians(30)) * 100
-      );
+      strictEqual(result.turtle.x, Math.cos(radians(30)) * 100);
     });
 
     it("uses sin to calculate y", () => {
@@ -91,21 +86,19 @@ describe("moveDistance", () => {
           ...initialState,
           turtle: { x: 0, y: 0, angle: 30 },
         },
-        100
+        100,
       );
-      expect(result.turtle.y).toEqual(
-        Math.sin(radians(30)) * 100
-      );
+      strictEqual(result.turtle.y, Math.sin(radians(30)) * 100);
     });
   });
 
-  describe("penup", () => {
+  describe("pen up", () => {
     it("does not draw line if pen is up", () => {
       doMove(
         { ...initialState, pen: { down: false } },
         10
       );
-      expect(result.drawCommands).toEqual([]);
+      deepStrictEqual(result.drawCommands,[]);
     });
   });
 
@@ -115,7 +108,7 @@ describe("moveDistance", () => {
         { ...initialState, nextDrawCommandId: 123 },
         100
       );
-      expect(result.drawCommands[0].id).toEqual(123);
+      strictEqual(result.drawCommands[0].id, 123);
     });
 
     it("increases next id after command", () => {
@@ -123,7 +116,7 @@ describe("moveDistance", () => {
         { ...initialState, nextDrawCommandId: 123 },
         100
       );
-      expect(result.nextDrawCommandId).toEqual(124);
+      strictEqual(result.nextDrawCommandId, 124);
     });
   });
 });
