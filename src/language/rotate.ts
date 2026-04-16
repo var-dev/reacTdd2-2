@@ -1,4 +1,4 @@
-export const rotate = (state, angleValue) => {
+export const rotate = (state: LogoState, angleValue: Value): Partial<LogoState> => {
   const { turtle, drawCommands } = state;
   let { nextDrawCommandId } = state;
 

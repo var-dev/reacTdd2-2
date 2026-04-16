@@ -9,42 +9,76 @@ interface LogoState {
   nextDrawCommandId: number;
   turtle: TurtleState;
   isComplete?: boolean;
-  pen?: { down: boolean };
+  pen: { down: boolean };
+  collectedParameters: CollectedParameters;
+  currentInstruction?: Instruction;
+  parsedTokens: ParsedToken[];
+  parsedStatements: Instruction[];
+  allFunctions: Command[];
+  nextInstructionId: number;
   [key: string]: unknown;
 }
-
-type DrawCommand = {
-  drawCommand: string ;
+type DrawCommand = DrawCommandLinear | DrawCommandRotate | DrawCommandWait
+type DrawCommandLinear = {
+  drawCommand: "drawLine";
   id: number;
   x1: number;
   y1: number;
   x2: number;
   y2: number;
 };
-interface CommentParameters {
-  // empty for comments
-}
+type DrawCommandRotate = {
+  drawCommand: "rotate";
+  id: number;
+  previousAngle: number;
+  newAngle: number;
+};
+type DrawCommandWait = {
+  drawCommand: "wait";
+  id?: number;
+  seconds: number;
+};
+type InstructionListValue = Array<Instruction | undefined>;
+type ParameterValue = string | number | Instruction[];
+type CollectedParameters = Record<string, ParameterValue>;
+type CommandParameters = string
 
-interface CommentToken {
-  type?: string;
+interface Token {
+  type: string;
   token?: string;
   lineNumber?: number;
-  text?: string;
+  text: string;
+  instructionId?: number
 }
 
-interface ParseResult {
+interface ParsedResult {
   isComplete: boolean;
 }
 
-interface CommentCommand {
+interface Command {
   names: string[];
-  initial: Record<string, never>;
+  initial: Partial<LogoState>;
   isWriteProtected: boolean;
-  parameters: CommentParameters[];
-  parseToken: (state: LogoState, token: CommentToken) => ParseResult;
-  perform: (state: LogoState) => LogoState;
+  parameters: CommandParameters[];
+  parseToken: (state: LogoState, token: Token) => ParsedResult;
+  perform: (state: LogoState, instruction?:Instruction) => Partial<LogoState>;
 }
 
-type ParsedToken = { instructionId: number; text: string };
-type Instruction = { name: string; perform: (state: LogoState) => LogoState };
-type DistanceValue = { get: (state: LogoState) => number }
+type ParsedToken = {
+  instructionId?: number;
+  text: string;
+  type?: string;
+};
+type Instruction = {
+  name: string;
+  id: number;
+  functionDefinition: Command
+  collectedParameters?: CollectedParameters;
+  currentListValue?: InstructionListValue;
+  parsingListValue?: boolean;
+  collectingParameters?: boolean;
+  parameters?: string[];
+  innerInstructions?: Instruction[];
+  isComplete?: boolean;
+};
+type Value = { get: (state: LogoState) => number }

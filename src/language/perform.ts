@@ -1,4 +1,4 @@
-export const perform = (state, instruction) => {
+export const perform = (state:LogoState, instruction:Instruction) => {
   const { collectedParameters } = state;
   const stateWithParams = {
     ...state,
@@ -16,5 +16,5 @@ export const perform = (state, instruction) => {
   };
 };
 
-export const performAll = (state, instructions) =>
+export const performAll = (state: LogoState, instructions: Instruction[]) =>
   instructions.reduce(perform, state);

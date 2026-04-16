@@ -1,10 +1,10 @@
 
-export const comment: CommentCommand = {
+export const comment: Command = {
   names: [";"],
   initial: {},
   isWriteProtected: true,
   parameters: [],
-  parseToken: (state: LogoState, token: CommentToken): ParseResult => {
+  parseToken: (state: LogoState, token: Token): ParsedResult => {
     void state;
     if (
       token.type === "whitespace" &&

@@ -1,12 +1,4 @@
-
-interface ClearScreenCommand {
-  names: string[];
-  isWriteProtected: boolean;
-  initial: { isComplete: boolean };
-  perform: (state: LogoState) => LogoState;
-}
-
-export const clearScreen: ClearScreenCommand = {
+export const clearScreen: Partial<Command> = {
   names: ["clearscreen", "cs"],
   isWriteProtected: true,
   initial: { isComplete: true },
