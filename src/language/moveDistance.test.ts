@@ -9,7 +9,7 @@ const initialState: LogoState = {
   turtle: { x: 0, y: 0, angle: 0 },
   pen: { down: true },
   nextDrawCommandId: 123,
-};
+} as unknown as LogoState;
 
 describe("moveDistance", () => {
   let result: LogoState;

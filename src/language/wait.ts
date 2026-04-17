@@ -1,7 +1,7 @@
-import { integerParameterValue } from "./values";
-import { parseCall } from "./parseCall";
+import { integerParameterValue } from "./values.js";
+import { parseCall } from "./parseCall.js";
 
-const waitCommand = (state, seconds) => ({
+const waitCommand = (state: LogoState, seconds: Value) => ({
   drawCommand: "wait",
   seconds: seconds.get(state),
 });
@@ -12,7 +12,7 @@ export const wait = {
   initial: {},
   parseToken: parseCall,
   parameters: ["seconds"],
-  perform: (state) => ({
+  perform: (state: LogoState) => ({
     drawCommands: [
       ...state.drawCommands,
       waitCommand(

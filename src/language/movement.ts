@@ -2,9 +2,9 @@ import {
   negate,
   integerParameterValue,
 } from "./values";
-import { parseCall } from "./parseCall";
-import { moveDistance } from "./moveDistance";
-import { rotate } from "./rotate";
+import { parseCall } from "./parseCall.js";
+import { moveDistance } from "./moveDistance.js";
+import { rotate } from "./rotate.js";
 
 export const forward = {
   names: ["forward", "fd"],
@@ -12,7 +12,7 @@ export const forward = {
   initial: {},
   parseToken: parseCall,
   parameters: ["distance"],
-  perform: (state) =>
+  perform: (state: LogoState) =>
     moveDistance(
       state,
       integerParameterValue("distance")
@@ -25,7 +25,7 @@ export const backward = {
   initial: {},
   parseToken: parseCall,
   parameters: ["distance"],
-  perform: (state) =>
+  perform: (state: LogoState) =>
     moveDistance(
       state,
       negate(integerParameterValue("distance"))
@@ -38,7 +38,7 @@ export const left = {
   initial: {},
   parseToken: parseCall,
   parameters: ["angle"],
-  perform: (state) =>
+  perform: (state: LogoState) =>
     rotate(
       state,
       negate(integerParameterValue("angle"))
@@ -51,6 +51,6 @@ export const right = {
   initial: {},
   parseToken: parseCall,
   parameters: ["angle"],
-  perform: (state) =>
+  perform: (state: LogoState) =>
     rotate(state, integerParameterValue("angle")),
 };

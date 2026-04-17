@@ -1,4 +1,4 @@
-import { functionWithName } from "./functionTable.js";
+import { functionWithName } from "./functionWithName.js";
 import { perform } from "./perform.js";
 
 const areAllParametersFilled = (

@@ -1,8 +1,8 @@
 import { describe, it } from "node:test";
 import {
   builtInFunctions,
-  functionWithName,
 } from "./functionTable.js";
+import { functionWithName } from "./functionWithName.js";
 import { clearScreen } from "./clearScreen.js";
 import { deepStrictEqual, strictEqual } from "assert";
 
