@@ -10,7 +10,8 @@ import { performAll } from "./perform.js";
 const parseTo = (state: LogoState, token: Token) => {
   if (token.type === "whitespace") return {};
   const { currentInstruction } = state;
-  if (!currentInstruction?.name) {
+  // if (!currentInstruction.name) {
+  if (!currentInstruction?.collectingParameters && !currentInstruction?.parsingListValue) {
     return {
       name: token.text,
       collectingParameters: true,
@@ -34,17 +35,20 @@ const parseTo = (state: LogoState, token: Token) => {
   };
 };
 
-const mapObjectValues = (object: string[], f: Function) =>
+const mapObjectValues = (object: Record<string, any>, f: (value: any) => any) =>
   Object.keys(object).reduce(
     (mapped, key) => ({
       ...mapped,
-      [key]: f(object[Number(key)]),
+      [key]: f(object[key]),
     }),
-    {},
+    {} as Record<string, any>,
   );
 
-const insertParameterValues = (parameters: string[], state: LogoState) =>
-  mapObjectValues(parameters, (value: any) => {
+const insertParameterValues = (
+  parameters: CollectedParameters | undefined,
+  state: LogoState,
+) =>
+  mapObjectValues(parameters ?? {}, (value: any) => {
     if (isParameterReference(value))
       return parameterValue(value.substring(1)).get(state);
     return value;
@@ -55,7 +59,7 @@ const performCall = (state: LogoState, { innerInstructions }: { innerInstruction
     (instruction) => ({
       ...instruction,
       collectedParameters: insertParameterValues(
-        instruction.collectedParameters as unknown as string[] ?? [],
+        instruction.collectedParameters ,
         state,
       ),
     }),

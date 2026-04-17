@@ -1,6 +1,6 @@
-import { builtInFunctions } from "./language/functionTable";
+import { builtInFunctions } from "./language/functionTable.js";
 import { parseAndSaveStatement } from "./language/parseCall";
-import initialText from "../examples/initialText.lgo";
+import initialText from "../../examples/initialText.lgo.js";
 
 export const emptyState = {
   pen: { down: true },
@@ -20,11 +20,11 @@ export const initialState = {
   parsedTokens: tokenizeLine(initialText, 0),
 };
 
-function tokenizeLine(line, lastLineNumber) {
+function tokenizeLine(line: string, lastLineNumber: number): Token[] {
   const tokenRegExp = new RegExp(/(\S+)|\n/gm);
-  const tokens = [];
+  const tokens: Token[] = [];
   let lastIndex = 0;
-  let match;
+  let match: RegExpExecArray | null;
   let lineNumber = lastLineNumber + 1;
   while ((match = tokenRegExp.exec(line)) != null) {
     if (match.index > lastIndex) {
@@ -59,9 +59,9 @@ function tokenizeLine(line, lastLineNumber) {
   return tokens;
 }
 
-function lastLineNumber({ parsedTokens }) {
-  return parsedTokens.reduce((highest, token) => {
-    if (token.lineNumber > highest) {
+function lastLineNumber({ parsedTokens }: LogoState) {
+  return parsedTokens.reduce((highest: number, token) => {
+    if ((token?.lineNumber ?? 0) > highest) {
       return token.lineNumber;
     } else {
       return highest;
@@ -69,18 +69,18 @@ function lastLineNumber({ parsedTokens }) {
   }, 0);
 }
 
-export function parseStatement(line, state) {
+export function parseStatement(line: string, state: LogoState) {
   try {
     return parseTokens(
       tokenizeLine(line, lastLineNumber(state)),
       state
     );
-  } catch (e) {
+  } catch (e:any) {
     return { ...state, error: { ...e, line } };
   }
 }
 
-export function parseTokens(tokens, state) {
+export function parseTokens(tokens: Token[], state: LogoState) {
   const updatedState = tokens.reduce(
     parseAndSaveStatement,
     state

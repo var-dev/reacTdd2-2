@@ -1,17 +1,19 @@
+import { describe, it, beforeEach, mock } from "node:test";
 import {
   parseStatement,
   parseTokens,
   initialState,
-} from "../src/parser";
-import { builtInFunctions } from "../src/language/functionTable";
+} from "./parser.js";
+import { deepStrictEqual, strictEqual } from "assert";
+import { ok } from "assert/strict";
 
 describe("parseStatement", () => {
   it("moves forward", () => {
     const result = parseStatement(
       "forward 10",
-      initialState
+      initialState as LogoState
     );
-    expect(result.drawCommands).toEqual([
+    deepStrictEqual(result.drawCommands, [
       {
         drawCommand: "drawLine",
         id: 0,
@@ -26,9 +28,9 @@ describe("parseStatement", () => {
   it("moves forward by a different amount", () => {
     const result = parseStatement(
       "forward 20",
-      initialState
+      initialState as LogoState
     );
-    expect(result.drawCommands).toEqual([
+    deepStrictEqual(result.drawCommands, [
       {
         drawCommand: "drawLine",
         id: 0,
@@ -42,10 +44,10 @@ describe("parseStatement", () => {
 
   it("starts at a different position", () => {
     const result = parseStatement("forward 20", {
-      ...initialState,
+      ...initialState as LogoState,
       turtle: { x: 10, y: 10, angle: 0 },
     });
-    expect(result.drawCommands).toEqual([
+    deepStrictEqual(result.drawCommands,[
       {
         drawCommand: "drawLine",
         id: 0,
@@ -59,35 +61,35 @@ describe("parseStatement", () => {
 
   it("returns the new turtle position", () => {
     const result = parseStatement("forward 20", {
-      ...initialState,
+      ...initialState as LogoState,
       turtle: { x: 10, y: 10, angle: 0 },
     });
-    expect(result.turtle.x).toEqual(30);
-    expect(result.turtle.y).toEqual(10);
+    strictEqual(result.turtle.x, 30, 'expect 30');
+    strictEqual(result.turtle.y, 10, 'expect 10');
   });
 
   it("maintains the same angle when moving forward", () => {
     const result = parseStatement("forward 20", {
-      ...initialState,
+      ...initialState as LogoState,
       turtle: { x: 10, y: 10, angle: 30 },
     });
-    expect(result.turtle.angle).toEqual(30);
+    strictEqual(result.turtle.angle, 30);
   });
 
   it("issues a draw command if the command is a rotation", () => {
     const result = parseStatement("right 90", {
-      ...initialState,
+      ...initialState as LogoState,
       turtle: { x: 0, y: 0, angle: 0 },
     });
-    expect(result.drawCommands).toHaveLength(1);
+    strictEqual(result.drawCommands.length, 1);
   });
 
   it("rotates right", () => {
     const result = parseStatement("right 90", {
-      ...initialState,
+      ...initialState as LogoState,
       turtle: { x: 0, y: 0, angle: 0 },
     });
-    expect(result.turtle).toEqual({
+    deepStrictEqual(result.turtle, {
       x: 0,
       y: 0,
       angle: 90,
@@ -96,10 +98,10 @@ describe("parseStatement", () => {
 
   it("rotates right by a different amount", () => {
     const result = parseStatement("right 30", {
-      ...initialState,
+      ...initialState as LogoState,
       turtle: { x: 0, y: 0, angle: 0 },
     });
-    expect(result.turtle).toEqual({
+    deepStrictEqual(result.turtle, {
       x: 0,
       y: 0,
       angle: 30,
@@ -108,10 +110,10 @@ describe("parseStatement", () => {
 
   it("rotates right by adding on to existing rotation", () => {
     const result = parseStatement("right 30", {
-      ...initialState,
+      ...initialState as LogoState,
       turtle: { x: 0, y: 0, angle: 90 },
     });
-    expect(result.turtle).toEqual({
+    deepStrictEqual(result.turtle, {
       x: 0,
       y: 0,
       angle: 120,
@@ -121,9 +123,9 @@ describe("parseStatement", () => {
   it("moves backward", () => {
     const result = parseStatement(
       "backward 10",
-      initialState
+      initialState as LogoState
     );
-    expect(result.drawCommands).toEqual([
+    deepStrictEqual(result.drawCommands, [
       {
         drawCommand: "drawLine",
         id: 0,
@@ -137,10 +139,10 @@ describe("parseStatement", () => {
 
   it("rotates left", () => {
     const result = parseStatement("left 90", {
-      ...initialState,
+      ...initialState as LogoState,
       turtle: { x: 0, y: 0, angle: 0 },
     });
-    expect(result.turtle).toEqual({
+    deepStrictEqual(result.turtle, {
       x: 0,
       y: 0,
       angle: -90,
@@ -151,20 +153,18 @@ describe("parseStatement", () => {
     it("includes the last entered line in the command", () => {
       const result = parseStatement(
         "unknown 90",
-        initialState
+        initialState as LogoState
       );
-      expect(result.error.line).toEqual("unknown 90");
+      strictEqual(result.error.line, "unknown 90");
     });
 
     it("returns a basic error for an unknown command", () => {
       const result = parseStatement(
         "unknown 90",
-        initialState
+        initialState as LogoState
       );
-      expect(result.error.description).toEqual(
-        "Unknown function: unknown"
-      );
-      expect(result.error.position).toEqual({
+      strictEqual(result.error.description, "Unknown function: unknown");
+      deepStrictEqual(result.error.position, {
         end: 6,
         start: 0,
       });
@@ -173,12 +173,10 @@ describe("parseStatement", () => {
     it("returns a basic error for a different unknown command", () => {
       const result = parseStatement(
         "still-unknown 90",
-        initialState
+        initialState as LogoState
       );
-      expect(result.error.description).toEqual(
-        "Unknown function: still-unknown"
-      );
-      expect(result.error.position).toEqual({
+      strictEqual(result.error.description, "Unknown function: still-unknown");
+      deepStrictEqual(result.error.position, {
         end: 12,
         start: 0,
       });
@@ -187,72 +185,70 @@ describe("parseStatement", () => {
     it("records multiple events", () => {
       let state = parseStatement(
         "forward 10",
-        initialState
+        initialState as LogoState
       );
       state = parseStatement("forward 10", state);
-      expect(state.drawCommands).toHaveLength(2);
+      strictEqual(state.drawCommands.length, 2);
     });
 
     it("returns error if value is not an integer", () => {
       const result = parseStatement(
         "forward notnumber",
-        initialState
+        initialState as LogoState
       );
-      expect(result.error.description).toEqual(
-        "Argument is not an integer"
-      );
+      strictEqual(result.error.description, "Argument is not an integer");
     });
   });
 
   it("appends draw command when rotating", () => {
     let state = parseStatement(
       "forward 10",
-      initialState
+      initialState as LogoState
     );
     state = parseStatement("right 10", state);
-    expect(state.drawCommands).toHaveLength(2);
+    strictEqual(state.drawCommands.length, 2);
   });
 
   it("maintains draw commands on error", () => {
     let state = parseStatement(
       "forward 10",
-      initialState
+      initialState as LogoState
     );
     state = parseStatement("unknown-command", state);
-    expect(state.drawCommands).toHaveLength(1);
+    strictEqual(state.drawCommands.length, 1);
   });
 
   describe("parsing", () => {
     it("accepts commands over multiple lines", () => {
       const state = parseStatement(
         "forward\n10",
-        initialState
+        initialState as LogoState
       );
-      expect(state.drawCommands).toHaveLength(1);
+      strictEqual(state.drawCommands.length, 1);
     });
 
     it("accepts multiple commands on the same line", () => {
       let state = parseStatement(
         "forward 10 backward 10",
-        initialState
+        initialState as LogoState
       );
-      expect(state.drawCommands).toHaveLength(2);
+      strictEqual(state.drawCommands.length, 2);
     });
 
     it("does not perform any commands if the statement was incomplete", () => {
       const state = parseStatement(
         "forward",
-        initialState
+        initialState as LogoState
       );
-      expect(state.drawCommands).toEqual([]);
+      deepStrictEqual(state.drawCommands, []);
     });
 
     it("returns the existing state if the statement was incomplete", () => {
       const state = parseStatement(
         "forward 10 backward",
-        initialState
+        initialState as LogoState
       );
-      expect(state).toEqual(initialState);
+      deepStrictEqual(state, initialState);
     });
   });
 
@@ -260,25 +256,25 @@ describe("parseStatement", () => {
     it("accepts the penup command", () => {
       const state = parseStatement(
         "penup",
-        initialState
+        initialState as LogoState
       );
-      expect(state.pen.down).toEqual(false);
+      strictEqual(state.pen.down, false);
     });
 
     it("accepts the pendown command", () => {
       const state = parseStatement("pendown", {
-        ...initialState,
+        ...initialState as LogoState,
         pen: { down: false },
       });
-      expect(state.pen.down).toEqual(true);
+      strictEqual(state.pen.down, true);
     });
 
     it("accepts the wait command", () => {
       const state = parseStatement(
         "wait 5",
-        initialState
+        initialState as LogoState
       );
-      expect(state.drawCommands).toEqual([
+      deepStrictEqual(state.drawCommands, [
         { drawCommand: "wait", seconds: 5 },
       ]);
     });
@@ -288,9 +284,9 @@ describe("parseStatement", () => {
     it("repeats an instruction many times", () => {
       let state = parseStatement(
         "repeat 3 [ forward 10 ]",
-        initialState
+        initialState as LogoState
       );
-      expect(state.drawCommands).toEqual([
+      deepStrictEqual(state.drawCommands, [
         {
           drawCommand: "drawLine",
           id: 0,
@@ -321,9 +317,9 @@ describe("parseStatement", () => {
     it("repeats multiple instructions", () => {
       let state = parseStatement(
         "repeat 2 [ forward 10 backward 10 ]",
-        initialState
+        initialState as LogoState
       );
-      expect(state.drawCommands).toEqual([
+      deepStrictEqual(state.drawCommands, [
         {
           drawCommand: "drawLine",
           id: 0,
@@ -362,33 +358,29 @@ describe("parseStatement", () => {
     it("returns an error if the first argument is not a number", () => {
       let state = parseStatement(
         "repeat c [ ]",
-        initialState
+        initialState as LogoState
       );
-      expect(state.error.description).toEqual(
-        "Argument is not an integer"
-      );
+      strictEqual(state.error.description, "Argument is not an integer");
     });
 
     it("returns an error if the last instruction is not complete", () => {
       let state = parseStatement(
         "repeat 2 [ forward ]",
-        initialState
+        initialState as LogoState
       );
-      expect(state.error.description).toEqual(
-        "The last command is not complete"
-      );
+      strictEqual(state.error.description, "The last command is not complete");
     });
   });
 
   describe("user-defined functions", () => {
     it("defines a function with no parameters that can be called", () => {
-      let state = initialState;
+      let state = initialState as LogoState;
       state = parseStatement(
         "to drawsquare forward 10 end",
         state
       );
       state = parseStatement("drawsquare", state);
-      expect(state.drawCommands).toEqual([
+      deepStrictEqual(state.drawCommands, [
         {
           drawCommand: "drawLine",
           id: 0,
@@ -401,13 +393,13 @@ describe("parseStatement", () => {
     });
 
     it("defines a function with multiple instructions", () => {
-      let state = initialState;
+      let state = initialState as LogoState;
       state = parseStatement(
         "to drawsquare forward 10 backward 10 end",
         state
       );
       state = parseStatement("drawsquare", state);
-      expect(state.drawCommands).toEqual([
+      deepStrictEqual(state.drawCommands, [
         {
           drawCommand: "drawLine",
           id: 0,
@@ -428,13 +420,13 @@ describe("parseStatement", () => {
     });
 
     it("passes a single parameter to a function", () => {
-      let state = initialState;
+      let state = initialState as LogoState;
       state = parseStatement(
         "to drawsquare :x forward :x end",
         state
       );
       state = parseStatement("drawsquare 10", state);
-      expect(state.drawCommands).toEqual([
+      deepStrictEqual(state.drawCommands, [
         {
           drawCommand: "drawLine",
           id: 0,
@@ -449,38 +441,36 @@ describe("parseStatement", () => {
     it("cannot override built-in functions", () => {
       const state = parseStatement(
         "to to end",
-        initialState
+        initialState as LogoState
       );
-      expect(state.error.description).toEqual(
-        "Cannot override the built-in function 'to'"
-      );
+      strictEqual(state.error.description, "Cannot override the built-in function 'to'");
     });
 
     it("can override user-defined functions", () => {
       let state = parseStatement(
         "to abc end",
-        initialState
+        initialState as LogoState
       );
       state = parseStatement("to abc end", state);
-      expect(state.error).not.toBeDefined();
+      strictEqual(state.error, undefined);
     });
 
     it("handles repeats inside of functions", () => {
       let state = parseStatement(
         "to abc repeat 2 [ forward 100 ] end",
-        initialState
+        initialState as LogoState
       );
       state = parseStatement("abc", state);
-      expect(state.error).not.toBeDefined();
+      strictEqual(state.error, undefined);
     });
 
     it("allows multi-line function definitions", () => {
       let state = parseStatement(
         "to abc\n",
-        initialState
+        initialState as LogoState
       );
       //state = parseStatement('abc', state);
-      expect(state.error).not.toBeDefined();
+      strictEqual(state.error, undefined);
     });
   });
 
@@ -488,29 +478,29 @@ describe("parseStatement", () => {
     it("matches uppercase forward command", () => {
       let result = parseStatement(
         "FORWARD 10",
-        initialState
+        initialState as LogoState
       );
-      expect(result.drawCommands).toHaveLength(1);
+      strictEqual(result.drawCommands.length, 1);
     });
 
     it("matches uppercase function name", () => {
-      let state = initialState;
+      let state = initialState as LogoState;
       state = parseStatement(
         "to drawsquare forward 10 end",
         state
       );
       state = parseStatement("DRAWSQUARE", state);
-      expect(state.drawCommands).toHaveLength(1);
+      strictEqual(state.drawCommands.length, 1);
     });
 
     it("matches uppercase parameter name", () => {
-      let state = initialState;
+      let state = initialState as LogoState;
       state = parseStatement(
         "to drawsquare :X forward :x end",
         state
       );
       state = parseStatement("drawsquare 10", state);
-      expect(state.drawCommands).toHaveLength(1);
+      strictEqual(state.drawCommands.length, 1);
     });
   });
 
@@ -518,43 +508,41 @@ describe("parseStatement", () => {
     it("matches fd alias", () => {
       let result = parseStatement(
         "fd 10",
-        initialState
+        initialState as LogoState
       );
-      expect(result.drawCommands).toHaveLength(1);
+      strictEqual(result.drawCommands.length, 1);
     });
   });
 
   describe("tokenizing", () => {
-    let tokenSpy;
+    let tokenSpy: any;
 
     beforeEach(() => {
-      tokenSpy = jest.fn();
+      tokenSpy = mock.fn();
     });
 
     it("passes whitespace through to current instruction if there is one", () => {
-      let result = parseStatement("; ", {
+      parseStatement("; ", {
         allFunctions: [
           {
             names: [";"],
             parseToken: tokenSpy,
-            perform: () => {},
-          },
+            perform: (): Partial<LogoState> => ({}) ,
+          } as unknown as Command,
         ],
         parsedTokens: [],
-      });
+      } as unknown as LogoState);
 
-      expect(tokenSpy).toBeCalledWith(
-        expect.anything(),
-        {
-          type: "whitespace",
-          text: " ",
-          lineNumber: 1,
-        }
-      );
+      strictEqual(tokenSpy.mock.calls.length, 1);
+      deepStrictEqual(tokenSpy.mock.calls[0][1], {
+        type: "whitespace",
+        text: " ",
+        lineNumber: 1,
+      });
     });
 
     it("includes line numbers when parsing multiple lines", () => {
-      let result = parseStatement("; \n ", {
+      parseStatement("; \n ", {
         allFunctions: [
           {
             names: [";"],
@@ -563,36 +551,28 @@ describe("parseStatement", () => {
           },
         ],
         parsedTokens: [],
-      });
+      } as unknown as LogoState);
 
-      expect(tokenSpy).toBeCalledWith(
-        expect.anything(),
-        {
-          type: "whitespace",
-          text: " ",
-          lineNumber: 1,
-        }
-      );
-      expect(tokenSpy).toBeCalledWith(
-        expect.anything(),
-        {
-          type: "whitespace",
-          text: "\n",
-          lineNumber: 1,
-        }
-      );
-      expect(tokenSpy).toBeCalledWith(
-        expect.anything(),
-        {
-          type: "whitespace",
-          text: " ",
-          lineNumber: 2,
-        }
-      );
+      strictEqual(tokenSpy.mock.calls.length, 3);
+      deepStrictEqual(tokenSpy.mock.calls[0][1], {
+        type: "whitespace",
+        text: " ",
+        lineNumber: 1,
+      });
+      deepStrictEqual(tokenSpy.mock.calls[1][1], {
+        type: "whitespace",
+        text: "\n",
+        lineNumber: 1,
+      });
+      deepStrictEqual(tokenSpy.mock.calls[2][1], {
+        type: "whitespace",
+        text: " ",
+        lineNumber: 2,
+      });
     });
 
     it("batches up non-newline whitespace", () => {
-      let result = parseStatement("; \t", {
+      parseStatement("; \t", {
         allFunctions: [
           {
             names: [";"],
@@ -601,21 +581,19 @@ describe("parseStatement", () => {
           },
         ],
         parsedTokens: [],
-      });
+      } as unknown as LogoState);
 
-      expect(tokenSpy).toBeCalledWith(
-        expect.anything(),
-        {
-          type: "whitespace",
-          text: " \t",
-          lineNumber: 1,
-        }
-      );
+      strictEqual(tokenSpy.mock.calls.length, 1);
+      deepStrictEqual(tokenSpy.mock.calls[0][1], {
+        type: "whitespace",
+        text: " \t",
+        lineNumber: 1,
+      });
     });
 
     it("starts line numbers at existing script line number", () => {
       tokenSpy.mockReturnValue({ isComplete: true });
-      let result = parseStatement("; ", {
+      const result = parseStatement("; ", {
         allFunctions: [
           {
             names: [";"],
@@ -625,13 +603,13 @@ describe("parseStatement", () => {
         ],
         parsedStatements: [],
         parsedTokens: [{ lineNumber: 123 }],
-      });
+      } as unknown as LogoState);
 
-      expect(result.parsedTokens).toContainEqual({
-        type: "token",
-        text: ";",
-        lineNumber: 124,
-      });
+      ok(result.parsedTokens.some((parsedToken: any) =>
+        parsedToken.type === "token" &&
+        parsedToken.text === ";" &&
+        parsedToken.lineNumber === 124
+      ));
     });
   });
 });
@@ -687,9 +665,9 @@ describe("parseTokens", () => {
           lineNumber: 2,
         },
       ],
-      initialState
+      initialState as LogoState
     );
-    expect(result.drawCommands).toEqual([
+    deepStrictEqual(result.drawCommands, [
       {
         drawCommand: "drawLine",
         id: 0,

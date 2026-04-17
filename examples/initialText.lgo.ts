@@ -1,4 +1,4 @@
-; Welcome to Spec Logo!
+const  c = `; Welcome to Spec Logo!
 ;
 ; This is a Logo interpreter. Type your instructions
 ; at the prompt below, next to the '>'. Your aim is
@@ -30,4 +30,6 @@
 ; end
 ;
 ; Have fun!
-;
+;`
+
+export default c;

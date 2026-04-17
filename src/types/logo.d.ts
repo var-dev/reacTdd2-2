@@ -44,7 +44,7 @@ type CollectedParameters = Record<string, ParameterValue>;
 type CommandParameters = string
 
 interface Token {
-  type: string;
+  type: "whitespace" | "token";
   token?: string;
   lineNumber?: number;
   text: string;
@@ -68,6 +68,7 @@ type ParsedToken = {
   instructionId?: number;
   text: string;
   type?: string;
+  lineNumber: number;
 };
 type Instruction = {
   name: string;

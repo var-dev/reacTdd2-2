@@ -1,5 +1,5 @@
 import { describe, it } from "node:test";
-import { moveDistance } from "../../src/language/moveDistance";
+import { moveDistance } from "./moveDistance.js";
 import { deepStrictEqual, strictEqual } from "assert";
 
 const value = (v:any) => ({ get: () => v });
