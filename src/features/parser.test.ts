@@ -515,10 +515,10 @@ describe("parseStatement", () => {
   });
 
   describe("tokenizing", () => {
-    let tokenSpy: any;
+    let tokenSpy = mock.fn((...args: any[])=>{void(args); return {}});
 
     beforeEach(() => {
-      tokenSpy = mock.fn();
+      tokenSpy = mock.fn(()=>({}));
     });
 
     it("passes whitespace through to current instruction if there is one", () => {
@@ -534,7 +534,7 @@ describe("parseStatement", () => {
       } as unknown as LogoState);
 
       strictEqual(tokenSpy.mock.calls.length, 1);
-      deepStrictEqual(tokenSpy.mock.calls[0][1], {
+      deepStrictEqual(tokenSpy.mock.calls[0].arguments[1], {
         type: "whitespace",
         text: " ",
         lineNumber: 1,
@@ -554,17 +554,17 @@ describe("parseStatement", () => {
       } as unknown as LogoState);
 
       strictEqual(tokenSpy.mock.calls.length, 3);
-      deepStrictEqual(tokenSpy.mock.calls[0][1], {
+      deepStrictEqual(tokenSpy.mock.calls[0].arguments[1], {
         type: "whitespace",
         text: " ",
         lineNumber: 1,
       });
-      deepStrictEqual(tokenSpy.mock.calls[1][1], {
+      deepStrictEqual(tokenSpy.mock.calls[1].arguments[1], {
         type: "whitespace",
         text: "\n",
         lineNumber: 1,
       });
-      deepStrictEqual(tokenSpy.mock.calls[2][1], {
+      deepStrictEqual(tokenSpy.mock.calls[2].arguments[1], {
         type: "whitespace",
         text: " ",
         lineNumber: 2,
@@ -584,7 +584,7 @@ describe("parseStatement", () => {
       } as unknown as LogoState);
 
       strictEqual(tokenSpy.mock.calls.length, 1);
-      deepStrictEqual(tokenSpy.mock.calls[0][1], {
+      deepStrictEqual(tokenSpy.mock.calls[0].arguments[1], {
         type: "whitespace",
         text: " \t",
         lineNumber: 1,
@@ -592,7 +592,7 @@ describe("parseStatement", () => {
     });
 
     it("starts line numbers at existing script line number", () => {
-      tokenSpy.mockReturnValue({ isComplete: true });
+      tokenSpy.mock.mockImplementation(()=>({ isComplete: true }))     ;
       const result = parseStatement("; ", {
         allFunctions: [
           {

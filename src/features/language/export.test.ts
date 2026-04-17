@@ -6,8 +6,8 @@ describe("toInstructions", () => {
   it("joins two tokens in the same instruction", () => {
     const result = toInstructions({
       parsedTokens: [
-        { instructionId: 0, text: "a" },
-        { instructionId: 0, text: "b" },
+        { instructionId: 0, text: "a" } as ParsedToken,
+        { instructionId: 0, text: "b" } as ParsedToken,
       ],
     });
     assert.deepStrictEqual(result,["ab"]);
@@ -16,8 +16,8 @@ describe("toInstructions", () => {
   it("works for multiple instructions", () => {
     const result = toInstructions({
       parsedTokens: [
-        { instructionId: 0, text: "a" },
-        { instructionId: 1, text: "b" },
+        { instructionId: 0, text: "a" } as ParsedToken,
+        { instructionId: 1, text: "b" } as ParsedToken,
       ],
     });
     assert.deepStrictEqual(result, ["a", "b"]);

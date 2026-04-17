@@ -31,5 +31,5 @@ export function moveDistance(state:LogoState, distanceValue: Value):LogoState {
       y: newY,
     },
     nextDrawCommandId,
-  };
+  } as LogoState;
 }

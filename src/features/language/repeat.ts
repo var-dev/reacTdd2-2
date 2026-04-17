@@ -10,7 +10,7 @@ const flatten = (array: any[]) =>
     ...flattened,
     ...latest,
   ]);
-const duplicateArrayItems = (array, times) =>
+const duplicateArrayItems = (array: any, times: number) =>
   flatten(Array(times).fill(array));
 
 export const repeat: Command = {
@@ -26,4 +26,4 @@ export const repeat: Command = {
         integerParameterValue("times").get(state)
       )
     ),
-};
+} as unknown as Command;

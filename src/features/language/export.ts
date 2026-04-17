@@ -1,31 +1,31 @@
-
-
-export function toInstructions({ parsedTokens }: { parsedTokens: ParsedToken[] }) {
-  const byInstructions: Record<string | number, ParsedToken[]> = parsedTokens.reduce(
-    (instructions: Record<string | number, ParsedToken[]>, token: ParsedToken) => {
-      if (instructions[token.instructionId]) {
+export function toInstructions({
+  parsedTokens,
+}: {
+  parsedTokens: ParsedToken[];
+}) {
+  const byInstructions = parsedTokens.reduce(
+    (instructions, token: ParsedToken) => {
+      if (instructions[token.instructionId as number]) {
         return {
           ...instructions,
-          [token.instructionId]: [
-            ...instructions[token.instructionId],
+          [token.instructionId as number]: [
+            ...instructions[token.instructionId as number],
             token,
           ],
         };
       } else {
         return {
           ...instructions,
-          [token.instructionId]: [token],
+          [token.instructionId as number]: [token],
         };
       }
     },
-    {}
+    {} as Record<number,ParsedToken[]>,
   );
 
-  return Object.keys(byInstructions).map(
-    (instruction ) => {
-      return byInstructions[instruction]
-        .map((token: ParsedToken) => token.text)
-        .join("");
-    }
-  );
+  return Object.keys(byInstructions).map((instruction) => {
+    return byInstructions[Number(instruction)]
+      .map((token: ParsedToken) => token.text)
+      .join("");
+  });
 }

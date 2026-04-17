@@ -78,18 +78,18 @@ export const parseNextToken = (state: LogoState, nextToken: Token): LogoState =>
           instructionId: updatedInstruction.id,
         },
       ],
-    };
+    } as unknown as LogoState;
   }
   if (nextToken.type === "whitespace") {
     return {
       ...state,
       parsedTokens: [...state.parsedTokens, nextToken],
-    };
+    } as unknown as LogoState;
   }
   return {
     ...state,
     ...findFunction(state, nextToken),
-  };
+  } as unknown as LogoState;
 };
 
 export const parseAndSaveStatement = (state: LogoState, token: Token) => {
@@ -160,10 +160,11 @@ export const finishParsingList = ({
     ...addNextParameter(
       collectedParameters ?? {},
       functionDefinition,
-      listValue.filter(
-        (instruction): instruction is Instruction =>
+      listValue
+        .filter((instruction): instruction is Instruction =>
           instruction !== undefined,
-      ),
+        )
+        .reverse(),
     ),
     parsingListValue: false,
     currentListValue: undefined,
