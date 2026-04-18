@@ -1,12 +1,11 @@
 import React from "react";
 
-export const Turtle = ({ x, y, angle }) => {
-  const buildPoints = (x, y) =>
-    `${x - 5},${y + 5}, ${x},${y - 7}, ${x + 5},${
-      y + 5
+export const Turtle = ({ x, y, angle }: TurtleState) => {
+  const buildPoints = (x: number, y: number) =>
+    `${x - 5},${y + 5}, ${x},${y - 7}, ${x + 5},${y + 5
     }`;
 
-  const buildRotation = (angle, x, y) =>
+  const buildRotation = (angle: number, x: number, y: number) =>
     `${angle + 90}, ${x}, ${y}`;
 
   return (
