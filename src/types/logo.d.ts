@@ -12,10 +12,11 @@ interface LogoState {
   pen: { down: boolean };
   collectedParameters: CollectedParameters;
   currentInstruction?: Instruction;
-  parsedTokens: ParsedToken[];
+  parsedTokens: Token[];
   parsedStatements: Instruction[];
   allFunctions: Command[];
   nextInstructionId: number;
+  name: string;
   [key: string]: unknown;
 }
 type DrawCommand = DrawCommandLinear | DrawCommandRotate | DrawCommandWait
@@ -52,7 +53,7 @@ interface Token {
 }
 
 interface ParsedResult {
-  isComplete: boolean;
+  isComplete?: boolean | undefined;
 }
 
 interface Command {
@@ -60,16 +61,10 @@ interface Command {
   initial: Partial<LogoState>;
   isWriteProtected: boolean;
   parameters: CommandParameters[];
-  parseToken: (state: LogoState, token: Token) => ParsedResult;
+  parseToken: (state: LogoState, token: Token) => Partial<LogoState> | undefined;
   perform: (state: LogoState, instruction?:Instruction) => Partial<LogoState>;
 }
 
-type ParsedToken = {
-  instructionId?: number;
-  text: string;
-  type?: string;
-  lineNumber: number;
-};
 type Instruction = {
   name: string;
   id: number;

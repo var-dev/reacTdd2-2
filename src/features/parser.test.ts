@@ -275,7 +275,7 @@ describe("parseStatement", () => {
         initialState as LogoState
       );
       deepStrictEqual(state.drawCommands, [
-        { drawCommand: "wait", seconds: 5 },
+        { drawCommand: "wait" as const, seconds: 5 },
       ]);
     });
   });

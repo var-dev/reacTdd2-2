@@ -2,7 +2,7 @@ import { integerParameterValue } from "./values.js";
 import { parseCall } from "./parseCall.js";
 
 const waitCommand = (state: LogoState, seconds: Value) => ({
-  drawCommand: "wait",
+  drawCommand: "wait" as const,
   seconds: seconds.get(state),
 });
 

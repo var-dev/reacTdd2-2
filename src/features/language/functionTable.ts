@@ -23,4 +23,4 @@ export const builtInFunctions = [
   repeat,
   to,
   comment,
-];
+] as Command[];

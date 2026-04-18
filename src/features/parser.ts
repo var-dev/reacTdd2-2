@@ -13,7 +13,7 @@ export const emptyState = {
   nextDrawCommandId: 0,
   allFunctions: builtInFunctions,
   name: "Unnamed script",
-};
+} as LogoState;
 
 export const initialState = {
   ...emptyState,
@@ -60,9 +60,9 @@ function tokenizeLine(line: string, lastLineNumber: number): Token[] {
 }
 
 function lastLineNumber({ parsedTokens }: LogoState) {
-  return parsedTokens.reduce((highest: number, token) => {
-    if ((token?.lineNumber ?? 0) > highest) {
-      return token.lineNumber;
+  return parsedTokens.reduce((highest : number, token: Token) => {
+    if ((token.lineNumber ?? 0) > highest) {
+      return token.lineNumber ?? 0;
     } else {
       return highest;
     }

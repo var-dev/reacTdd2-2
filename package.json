@@ -14,7 +14,6 @@
     "vitest:run": "vitest run"
   },
   "dependencies": {
-    "@reduxjs/toolkit": "^2.11.2",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-redux": "^9.2.0",
@@ -22,6 +21,7 @@
     "redux-saga": "^1.4.2"
   },
   "devDependencies": {
+    "@reduxjs/toolkit": "^2.11.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",

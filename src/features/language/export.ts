@@ -1,10 +1,10 @@
 export function toInstructions({
   parsedTokens,
 }: {
-  parsedTokens: ParsedToken[];
+  parsedTokens: Token[];
 }) {
   const byInstructions = parsedTokens.reduce(
-    (instructions, token: ParsedToken) => {
+    (instructions, token: Token) => {
       if (instructions[token.instructionId as number]) {
         return {
           ...instructions,
@@ -20,12 +20,12 @@ export function toInstructions({
         };
       }
     },
-    {} as Record<number,ParsedToken[]>,
+    {} as Record<number,Token[]>,
   );
 
   return Object.keys(byInstructions).map((instruction) => {
     return byInstructions[Number(instruction)]
-      .map((token: ParsedToken) => token.text)
+      .map((token: Token) => token.text)
       .join("");
   });
 }
