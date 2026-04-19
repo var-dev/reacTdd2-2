@@ -1,6 +1,12 @@
-import React from "react";
+interface LineCommand {
+  id: string | number;
+  x1: number | string;
+  y1: number | string;
+  x2: number | string;
+  y2: number | string;
+}
 
-export const StaticLines = ({ lineCommands }) =>
+export const StaticLines = ({ lineCommands }: { lineCommands: LineCommand[] }) =>
   lineCommands.map(({ id, x1, y1, x2, y2 }) => (
     <line
       key={id}
