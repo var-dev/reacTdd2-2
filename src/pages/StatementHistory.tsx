@@ -1,15 +1,13 @@
-import React from "react";
-import { useSelector } from "react-redux";
+// import { useSelector } from "react-redux";
+import { useAppSelector } from "../features/redux/hooks";
 
-const groupByLineNumber = (tokens) => {
-  return tokens.reduce((lines, token) => {
+const groupByLineNumber = (tokens: Token[]) => {
+  return tokens.reduce((lines: Record<number,Token[]>, token: Token) => {
+    if(token.lineNumber === undefined) return {...lines}
     if (lines[token.lineNumber]) {
       return {
         ...lines,
-        [token.lineNumber]: [
-          ...lines[token.lineNumber],
-          token,
-        ],
+        [token.lineNumber]: [...lines[token.lineNumber], token,],
       };
     } else {
       return {
@@ -23,7 +21,7 @@ const groupByLineNumber = (tokens) => {
 export const LineWithNumber = ({
   number,
   tokens,
-}) => {
+}: {number: number; tokens: Token[];}) => {
   const fullTextLine = tokens
     .map((instruction) => instruction.text)
     .join("");
@@ -36,9 +34,7 @@ export const LineWithNumber = ({
 };
 
 export const StatementHistory = () => {
-  const parsedTokens = useSelector(
-    ({ script: { parsedTokens } }) => parsedTokens
-  );
+  const parsedTokens = useAppSelector(({ script: { parsedTokens } }) => parsedTokens);
   const lines = groupByLineNumber(parsedTokens);
 
   return (
@@ -46,8 +42,8 @@ export const StatementHistory = () => {
       {Object.keys(lines).map((lineNumber) => (
         <LineWithNumber
           key={lineNumber}
-          number={lineNumber}
-          tokens={lines[lineNumber]}
+          number={Number(lineNumber)}
+          tokens={lines[Number(lineNumber)]}
         />
       ))}
     </tbody>

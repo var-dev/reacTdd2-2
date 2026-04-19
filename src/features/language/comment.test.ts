@@ -18,7 +18,7 @@ describe("parse", () => {
   });
 
   it("parses multiple word comments until a new line appears", () => {
-    let state = {};
+    let state = {} as Partial<LogoState> | undefined;
     state = comment.parseToken(state as LogoState, {
       type: "word",
       text: "another",
