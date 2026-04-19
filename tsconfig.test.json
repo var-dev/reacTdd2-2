@@ -1,0 +1,11 @@
+// tsconfig.test.json
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "moduleResolution": "node",       // 👈
+    "allowImportingTsExtensions": false, // 👈 incompatible with node resolution
+    "verbatimModuleSyntax": false,    // 👈 can cause issues with tsx/ts-node
+    "noEmit": false
+  },
+  "include": ["src"]
+}
