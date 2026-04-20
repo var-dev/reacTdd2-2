@@ -1,5 +1,4 @@
-// import { useSelector } from "react-redux";
-import { useAppSelector } from "../features/redux/hooks";
+import { useAppSelector } from "../features/redux/hooks.js";
 
 const groupByLineNumber = (tokens: Token[]) => {
   return tokens.reduce((lines: Record<number,Token[]>, token: Token) => {
