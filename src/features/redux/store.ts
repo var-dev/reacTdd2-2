@@ -1,5 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import scriptReducer from './scriptSlice.js'
+import { initialState } from "../parser.js";
 
 // export const configureStore = (storeEnhancers = [], initialState = {}) => {
 //   return createStore(
@@ -15,6 +16,7 @@ export const store = configureStore({
   reducer: {
     script: scriptReducer,
   },
+  preloadedState: {script: initialState}
 });
 
 export type RootState = ReturnType<typeof store.getState>;

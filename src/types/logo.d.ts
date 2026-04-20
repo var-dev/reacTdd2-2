@@ -17,6 +17,7 @@ interface LogoState {
   allFunctions: Command[];
   nextInstructionId: number;
   name: string;
+  error?: {description:string}
   [key: string]: unknown;
 }
 type DrawCommand = DrawCommandLinear | DrawCommandRotate | DrawCommandWait

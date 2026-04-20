@@ -1,4 +1,4 @@
-import { describe, it, beforeEach, mock } from "node:test";
+import { describe, it, beforeEach } from "node:test";
 import { type ReactNode } from "react";
 import '../test/domSetup.js'
 import { render, screen, cleanup } from "@testing-library/react";
@@ -45,9 +45,9 @@ describe("StatementHistory", () => {
   })
   it("renders a tbody", () => {
     renderInTableWithStore(<StatementHistory />, testStore);
-    const rows = screen.getAllByRole<HTMLTableRowElement>("row");
-    strictEqual(rows[0].cells[0].textContent, '1');
-    strictEqual(rows[0].cells[0].className, 'lineNumber', 'expected className=lineNumber');
+    // expect(element("tbody")).not.toBeNull();
+    const tbody = screen.getByRole("rowgroup");
+    strictEqual(tbody.tagName, 'TBODY');
   });
 
   it("renders a table cell with the line number as the first cell in each row", () => {

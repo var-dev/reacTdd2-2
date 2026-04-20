@@ -13,6 +13,7 @@ export const emptyState = {
   nextDrawCommandId: 0,
   allFunctions: builtInFunctions,
   name: "Unnamed script",
+  error: undefined
 } as LogoState;
 
 export const initialState = {
