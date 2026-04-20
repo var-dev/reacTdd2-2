@@ -1,12 +1,14 @@
-import { describe, it } from "node:test";
+import { describe, it, beforeEach } from "node:test";
 import { type ReactNode } from "react";
 import '../test/domSetup.js'
-import { render, screen } from "@testing-library/react";
+import { render, screen, cleanup } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { StatementHistory } from "./StatementHistory.js";
 import type { EnhancedStore } from "@reduxjs/toolkit";
 import {createTestStore} from '../../test/builders/testStore.js'
 import { strictEqual } from "node:assert/strict";
+
+beforeEach(() => {cleanup()})
 
 describe("StatementHistory", () => {
   const initialState = {

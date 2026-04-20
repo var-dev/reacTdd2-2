@@ -1,34 +1,20 @@
 import React, { useState } from "react";
-import {
-  useDispatch,
-  useSelector,
-} from "react-redux";
+import { useAppSelector, useAppDispatch } from "../features/redux/hooks.js";
+import { submitScriptName } from "../features/redux/scriptSlice.js";
 
-const ifEnterKey = (e, func) => {
+const ifEnterKey = (e: React.KeyboardEvent<HTMLInputElement>, func: Function) => {
   if (e.key === "Enter") {
     func();
   }
 };
 
-const submitScriptName = (text) => ({
-  type: "SUBMIT_SCRIPT_NAME",
-  text,
-});
-
 export const ScriptName = () => {
-  const name = useSelector(
-    ({ script }) => script.name
-  );
+  const name = useAppSelector(({ script }) => script.name);
+  const dispatch = useAppDispatch();
+  const [updatedScriptName, setScriptName] = useState(name);
+  const [editingScriptName, setEditingScriptName] = useState(false);
 
-  const dispatch = useDispatch();
-
-  const [updatedScriptName, setScriptName] =
-    useState(name);
-  const [editingScriptName, setEditingScriptName] =
-    useState(false);
-
-  const toggleEditingScriptName = () =>
-    setEditingScriptName(!editingScriptName);
+  const toggleEditingScriptName = () => setEditingScriptName(!editingScriptName);
   const completeEditingScriptName = () => {
     if (editingScriptName) {
       toggleEditingScriptName();
@@ -36,21 +22,15 @@ export const ScriptName = () => {
     }
   };
 
-  const beginEditingScriptName = () =>
-    toggleEditingScriptName();
-
   return (
     <input
+      aria-label="Script name input"
       id="name"
-      className={
-        editingScriptName ? "isEditing" : null
-      }
+      className={editingScriptName ? "isEditing" : undefined}
       value={updatedScriptName}
-      onFocus={beginEditingScriptName}
+      onFocus={() => toggleEditingScriptName()}
       onChange={(e) => setScriptName(e.target.value)}
-      onKeyPress={(e) =>
-        ifEnterKey(e, completeEditingScriptName)
-      }
+      onKeyDown={(e) => ifEnterKey(e, completeEditingScriptName)}
       onBlur={completeEditingScriptName}
     />
   );
