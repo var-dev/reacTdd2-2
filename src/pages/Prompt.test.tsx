@@ -37,7 +37,7 @@ describe("Prompt", () => {
             if(action.type === 'script/submitEditLine') {
               return {...state, nextInstructionId: (state.nextInstructionId ?? 0) + 1}
             }
-          return state
+          return {...state}
           },
       },
       preloadedState: { script: initialState.script } as unknown as { script: LogoState },
