@@ -1,47 +1,31 @@
 import React, { useState } from "react";
-import {
-  useSelector,
-  useDispatch,
-} from "react-redux";
-
-const submitEditLine = (text) => ({
-  type: "SUBMIT_EDIT_LINE",
-  text,
-});
+import { submitEditLine } from "../features/redux/scriptSlice";
+import { useAppDispatch, useAppSelector } from "../features/redux/hooks";
 
 export const Prompt = () => {
-  const nextInstructionId = useSelector(
-    ({ script: { nextInstructionId } }) =>
-      nextInstructionId
-  );
-  const dispatch = useDispatch();
+  const nextInstructionId = useAppSelector(({ script: { nextInstructionId } }) => nextInstructionId);
+  const dispatch = useAppDispatch();
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       setShouldSubmit(true);
     }
   };
 
-  const handleChange = (e) => {
-    setEditPrompt(e.target.value);
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setEditPrompt((e.target as HTMLTextAreaElement).value);
     if (shouldSubmit) {
-      dispatch(submitEditLine(e.target.value));
+      dispatch(submitEditLine((e.target as HTMLTextAreaElement).value));
       setShouldSubmit(false);
     }
   };
 
-  const handleScroll = (e) =>
-    setHeight(e.target.scrollHeight);
+  const handleScroll = (e: React.UIEvent<HTMLTextAreaElement>) =>
+    setHeight((e.target as HTMLTextAreaElement).scrollHeight);
 
   const [editPrompt, setEditPrompt] = useState("");
-  const [shouldSubmit, setShouldSubmit] =
-    useState(false);
-
-  const [
-    currentInstructionId,
-    setCurrentInstructionId,
-  ] = useState(nextInstructionId);
-
+  const [shouldSubmit, setShouldSubmit] = useState(false);
+  const [currentInstructionId, setCurrentInstructionId,] = useState(nextInstructionId);
   const [height, setHeight] = useState(20);
 
   if (currentInstructionId != nextInstructionId) {
@@ -56,11 +40,12 @@ export const Prompt = () => {
         <td className="promptIndicator">&gt;</td>
         <td>
           <textarea
+            aria-label="Prompt Textarea"
             onScroll={handleScroll}
             value={editPrompt}
             style={{ height: height }}
             onChange={handleChange}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyPress}
           />
         </td>
       </tr>
