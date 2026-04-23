@@ -1,18 +1,13 @@
-import React from "react";
-import { useSelector } from "react-redux";
-import { Turtle } from "./Turtle";
-import { StaticLines } from "./StaticLines";
+import { useAppSelector } from "../features/redux/hooks.js";
+import { Turtle } from "./Turtle.js";
+import { StaticLines } from "./StaticLines.js";
 
-const isDrawLineCommand = (command) =>
+const isDrawLineCommand = (command: DrawCommand) =>
   command.drawCommand === "drawLine";
 
 export const Drawing = () => {
-  const { drawCommands, turtle } = useSelector(
-    ({ script }) => script
-  );
-  const lineCommands = drawCommands.filter(
-    isDrawLineCommand
-  );
+  const { drawCommands, turtle } = useAppSelector(({ script }) => script);
+  const lineCommands = drawCommands.filter(isDrawLineCommand);
 
   return (
     <div id="viewport">

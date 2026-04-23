@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "TSX_TSCONFIG_PATH=./tsconfig.test.json node --import tsx --test 'src/**/*.test.ts' --test 'src/**/*.test.tsx' --test 'server/**/*.test.ts' --test 'server/**/*.test.tsx'",
+    "test": "TSX_TSCONFIG_PATH=./tsconfig.test.json node --experimental-test-module-mocks --import tsx --test 'src/**/*.test.ts' --test 'src/**/*.test.tsx' --test 'server/**/*.test.ts' --test 'server/**/*.test.tsx'",
     "test-only": "node --test-only --import tsx --test \"test/**/*.{test.ts,test.tsx}\"",
     "vitest": "vitest",
     "vitest:run": "vitest run"
