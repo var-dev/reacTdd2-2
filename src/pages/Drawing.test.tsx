@@ -8,18 +8,6 @@ import { type Middleware } from "@reduxjs/toolkit";
 import { deepStrictEqual, strictEqual } from "assert";
 import { horizontalLine, verticalLine } from "./sampleInstructions.js";
 
-// import {
-//   initializeReactContainer,
-//   renderWithStore,
-//   element,
-//   elements,
-// } from "./reactTestExtensions";
-// import {
-//   horizontalLine,
-//   verticalLine,
-//   rotate90,
-// } from "./sampleInstructions.js";
-
 //@ts-expect-error
 const mockTurtle = mock.fn((...args: any[]) => <div id="Turtle" data-testid="Turtle" />);
 //@ts-expect-error
@@ -81,10 +69,6 @@ describe("Drawing", () => {
     mockTurtle.mock.resetCalls()
     mockStaticLines.mock.resetCalls()
   });
-
-  // const svg = () => element("svg");
-  // const line = () => element("line");
-  // const allLines = () => elements("line");
 
   it("renders an svg inside div#viewport", async () => {
     const {Drawing} = (await import("./Drawing.js"))
