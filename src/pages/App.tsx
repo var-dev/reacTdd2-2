@@ -1,10 +1,9 @@
-import React from "react";
-import { MenuButtons } from "./MenuButtons";
-import { ScriptName } from "./ScriptName";
-import { Drawing } from "./Drawing";
-import { StatementHistory } from "./StatementHistory";
-import { Prompt } from "./Prompt";
-import { PromptError } from "./PromptError";
+import { MenuButtons } from "./MenuButtons.js";
+import { ScriptName } from "./ScriptName.js";
+import { Drawing } from "./Drawing.js";
+import { StatementHistory } from "./StatementHistory.js";
+import { Prompt } from "./Prompt.js";
+import { PromptError } from "./PromptError.js";
 
 export const App = () => (
   <div id="mainWindow">
