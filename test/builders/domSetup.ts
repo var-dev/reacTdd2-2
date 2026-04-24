@@ -11,6 +11,7 @@ globalThis.Node = dom.window.Node;
 globalThis.Event = dom.window.Event;
 globalThis.MouseEvent = dom.window.MouseEvent;
 globalThis.KeyboardEvent = dom.window.KeyboardEvent;
+//@ts-expect-error
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 Object.defineProperty(globalThis, "navigator", {

@@ -1,5 +1,5 @@
 import { describe, it, beforeEach } from "node:test";
-import '../test/domSetup.js'
+import '../../test/builders/domSetup.js'
 import { ScriptName } from "./ScriptName.js";
 import { store } from "../features/redux/store.js";
 import {type ReactNode } from "react";

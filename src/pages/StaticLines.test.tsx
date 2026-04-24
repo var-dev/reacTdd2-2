@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import React from "react";
-import '../test/domSetup.js'
+import '../../test/builders/domSetup.js'
 import { render } from "@testing-library/react";
 import { StaticLines } from "./StaticLines.js";
 import {

@@ -1,6 +1,6 @@
 import { describe, it, beforeEach } from "node:test";
 import React from "react";
-import '../test/domSetup.js'
+import '../../test/builders/domSetup.js'
 import { render } from "@testing-library/react";
 import { Turtle } from "./Turtle.jsx";
 import { strictEqual } from "assert";
