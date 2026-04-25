@@ -1,4 +1,4 @@
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, createAction, type PayloadAction } from "@reduxjs/toolkit";
 import { parseStatement, initialState } from "../parser.js";
 
 const scriptSlice = createSlice({
@@ -18,5 +18,7 @@ const scriptSlice = createSlice({
   },
 });
 
+export const undo = createAction<void>('script/undo')
+export const redo = createAction<void>('script/redo')
 export const { submitScriptName, submitEditLine, reset } = scriptSlice.actions;
 export default scriptSlice.reducer;
