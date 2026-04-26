@@ -1,6 +1,6 @@
 import { type UnknownAction } from "@reduxjs/toolkit";
 import { type ScriptReducer } from "./store.js";
-import { undo, reset } from "./scriptSlice";
+import { undo, reset, redo } from "./scriptSlice.js";
 
 
 export const withUndoRedo = (reducer: ScriptReducer) => {
@@ -29,15 +29,33 @@ let future: LogoState[] = [];
         return {
           ...state,
           canUndo: false,
-          canRedo: future.length > 0 ? true : false,
+          canRedo: future.length > 0,
         }
       }
-      const last = past.at(-1)!;
+      const tail = past.at(-1)!;
       past = past.slice(0, -1);
-      future = [last, ...future]
+      future = [state, ...future]
       return {
-        ...last,
+        ...tail,
         canUndo: past.length > 0,
+        canRedo: true,
+      }
+    }
+
+    if (redo.match(action)) {
+      if (future.length === 0) {
+        return {
+          ...state,
+          canUndo: past.length > 0,
+          canRedo: false,
+        }
+      }
+      const head = future[0];
+      future = future.slice(1);
+      past = [...past, state]
+      return {
+        ...head,
+        canUndo: true,
         canRedo: future.length > 0,
       }
     }
@@ -55,7 +73,7 @@ let future: LogoState[] = [];
     return {
       ...newPresent,
       canUndo: past.length > 0,
-      canRedo: future.length > 0,
+      canRedo: false,
     };
   };
 };

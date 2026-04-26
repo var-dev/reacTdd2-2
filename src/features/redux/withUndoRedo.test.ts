@@ -2,7 +2,7 @@ import { describe, it, before, afterEach, mock } from 'node:test';
 import { type ScriptReducer } from './store';
 import { type EnhancedStore, type UnknownAction } from '@reduxjs/toolkit';
 import { strictEqual } from 'assert';
-import { reset, submitEditLine, undo } from './scriptSlice';
+import { reset, submitEditLine, undo, redo } from './scriptSlice.js';
 
 type ScriptDecorator = (reducer: ScriptReducer) => (state: LogoState | undefined, action: UnknownAction) => LogoState
 let mockDecorator: it.Mock<ScriptDecorator>
@@ -75,5 +75,43 @@ describe("withUndoRedo", () => {
     store.dispatch(undo())
     strictEqual(store.getState().script.parsedStatements.length, 1, 'expect parsedStatements.length === 1')
     strictEqual(store.getState().script.parsedStatements[0].name, 'fd', 'expect last command to be fd after undo')
+    strictEqual(store.getState().script.canRedo, true, 'expect canRedo true')
+  });
+  it("canRedo", () => {
+    store.dispatch(submitEditLine('fd 5'))
+    store.dispatch(submitEditLine('bd 9'))
+    store.dispatch(undo())
+    store.dispatch(redo())
+    strictEqual(store.getState().script.canRedo, false, 'expect canRedo === false')
+    strictEqual(store.getState().script.parsedStatements.length, 2, 'expect parsedStatements.length === 2')
+    strictEqual(store.getState().script.parsedStatements[1].name, 'bd', 'expect last command to be bd')
+  });
+  it("can redo multiple levels", () => {
+    store.dispatch(submitEditLine('fd 5'))
+    store.dispatch(submitEditLine('rt 90'))
+    store.dispatch(submitEditLine('bd 5'))
+    store.dispatch(undo())
+    store.dispatch(undo())
+    store.dispatch(submitEditLine('invalid 1'))
+    store.dispatch(redo())
+    store.dispatch(submitEditLine('invalid 2'))
+    store.dispatch(redo())
+    strictEqual(store.getState().script.parsedStatements.length, 3, 'expect parsedStatements.length === 3')
+    strictEqual(store.getState().script.parsedStatements[0].name, 'fd', 'expect fd')
+    strictEqual(store.getState().script.parsedStatements[1].name, 'rt', 'expect rt')
+    strictEqual(store.getState().script.parsedStatements[2].name, 'bd', 'expect bd')
+    strictEqual(store.getState().script.canRedo, false, 'expect canRedo false')
+  });
+  it("canRedo false after new instruction", () => {
+    store.dispatch(submitEditLine('fd 5'))
+    store.dispatch(submitEditLine('rt 90'))
+    store.dispatch(submitEditLine('bd 5'))
+    store.dispatch(undo())
+    store.dispatch(undo())
+    store.dispatch(submitEditLine('lt 180'))
+    strictEqual(store.getState().script.parsedStatements.length, 2, 'expect parsedStatements.length === 2')
+    strictEqual(store.getState().script.parsedStatements[0].name, 'fd', 'expect fd')
+    strictEqual(store.getState().script.parsedStatements[1].name, 'lt', 'expect lt')
+    strictEqual(store.getState().script.canRedo, false, 'expect canRedo false')
   });
 });
