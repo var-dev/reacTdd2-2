@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { submitEditLine } from "../features/redux/scriptSlice";
 import { useAppDispatch, useAppSelector } from "../features/redux/hooks";
 
 export const Prompt = () => {
   const nextInstructionId = useAppSelector(({ script: { nextInstructionId } }) => nextInstructionId);
   const dispatch = useAppDispatch();
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {inputRef.current?.focus()}, [inputRef]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
@@ -46,6 +48,7 @@ export const Prompt = () => {
             style={{ height: height }}
             onChange={handleChange}
             onKeyDown={handleKeyPress}
+            ref={inputRef}
           />
         </td>
       </tr>

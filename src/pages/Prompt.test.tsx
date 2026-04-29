@@ -9,12 +9,23 @@ import type { ReactNode } from "react";
 import { Prompt } from "./Prompt.js";
 import { strictEqual } from "assert";
 
+  const renderInTableWithStore = (
+    component: ReactNode,
+    store: EnhancedStore
+  ) => {
+    return render(
+      <Provider store={store}>
+        <table>{component}</table>
+      </Provider>
+    )
+  }
+
+beforeEach(() => {
+  cleanup();
+});
+
+
 describe("Prompt", () => {
-  beforeEach(() => {
-    cleanup();
-  });
-
-
   const createTestStore = (initialState: LogoState) =>
     configureStore({
       reducer: {
@@ -49,17 +60,6 @@ describe("Prompt", () => {
       }).concat(actionLogger),
     })
     return { store, actionLog };
-  }
-
-  const renderInTableWithStore = (
-    component: ReactNode,
-    store: EnhancedStore
-  ) => {
-    return render(
-      <Provider store={store}>
-        <table>{component}</table>
-      </Provider>
-    )
   }
 
   it("renders a tbody", () => {
@@ -116,5 +116,13 @@ describe("Prompt", () => {
     await waitFor(() => {
       strictEqual(ta.value, "", "expect after submitting edit line: blanks the edit field")
     })
+  });
+});
+describe("prompt focus", async () => {
+  const {store } = await import ('../features/redux/store.js')
+  const textArea = () => screen.getByLabelText('Prompt Textarea')
+  it("sets focus when component first renders", () => {
+    renderInTableWithStore(<Prompt />, store);
+    strictEqual(document.activeElement, textArea());
   });
 });

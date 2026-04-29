@@ -1,4 +1,5 @@
 import { describe, it, before, afterEach, mock } from 'node:test';
+import '../../../test/builders/domSetup.js'
 import { type ScriptReducer } from './store';
 import { type EnhancedStore, type UnknownAction } from '@reduxjs/toolkit';
 import { strictEqual } from 'assert';
