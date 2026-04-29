@@ -47,7 +47,7 @@ type CommandParameters = string
 
 interface Token {
   type: "whitespace" | "token";
-  token?: string;
+  // token?: string;
   lineNumber?: number;
   text: string;
   instructionId?: number

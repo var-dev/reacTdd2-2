@@ -3,6 +3,7 @@ import {
   parseStatement,
   parseTokens,
   initialState,
+  emptyState
 } from "./parser.js";
 import { deepStrictEqual, strictEqual } from "assert";
 import { ok } from "assert/strict";
@@ -616,56 +617,57 @@ describe("parseStatement", () => {
 
 describe("parseTokens", () => {
   it("parses all tokens", () => {
+    const tokens: Token[] = [
+      {
+        type: "token",
+        text: "forward",
+        lineNumber: 1,
+        instructionId: 0,
+      },
+      {
+        type: "whitespace",
+        text: " ",
+        lineNumber: 1,
+        instructionId: 0,
+      },
+      {
+        type: "token",
+        text: "100",
+        lineNumber: 1,
+        instructionId: 0,
+      },
+      {
+        type: "whitespace",
+        text: "↵",
+        lineNumber: 1,
+      },
+      {
+        type: "token",
+        text: "right",
+        lineNumber: 2,
+        instructionId: 1,
+      },
+      {
+        type: "whitespace",
+        text: " ",
+        lineNumber: 2,
+        instructionId: 1,
+      },
+      {
+        type: "token",
+        text: "90",
+        lineNumber: 2,
+        instructionId: 1,
+      },
+      {
+        type: "whitespace",
+        text: "↵",
+        lineNumber: 2,
+      },
+    ];
     const result = parseTokens(
-      [
-        {
-          type: "token",
-          text: "forward",
-          lineNumber: 1,
-          instructionId: 0,
-        },
-        {
-          type: "whitespace",
-          text: " ",
-          lineNumber: 1,
-          instructionId: 0,
-        },
-        {
-          type: "token",
-          text: "100",
-          lineNumber: 1,
-          instructionId: 0,
-        },
-        {
-          type: "whitespace",
-          text: "↵",
-          lineNumber: 1,
-        },
-        {
-          type: "token",
-          text: "right",
-          lineNumber: 2,
-          instructionId: 1,
-        },
-        {
-          type: "whitespace",
-          text: " ",
-          lineNumber: 2,
-          instructionId: 1,
-        },
-        {
-          type: "token",
-          text: "90",
-          lineNumber: 2,
-          instructionId: 1,
-        },
-        {
-          type: "whitespace",
-          text: "↵",
-          lineNumber: 2,
-        },
-      ],
-      initialState as LogoState
+      tokens,
+      emptyState
     );
     deepStrictEqual(result.drawCommands, [
       {
@@ -683,5 +685,6 @@ describe("parseTokens", () => {
         newAngle: 90,
       },
     ]);
+    deepStrictEqual(result.parsedTokens, tokens);
   });
 });
