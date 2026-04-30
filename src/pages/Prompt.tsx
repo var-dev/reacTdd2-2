@@ -1,12 +1,18 @@
 import React, { useState, useRef, useEffect } from "react";
 import { submitEditLine } from "../features/redux/scriptSlice";
 import { useAppDispatch, useAppSelector } from "../features/redux/hooks";
+import { promptHasFocus } from "../features/redux/environmentSlice";
 
 export const Prompt = () => {
-  const nextInstructionId = useAppSelector(({ script: { nextInstructionId } }) => nextInstructionId);
+  const nextInstructionId = useAppSelector(({ script: { nextInstructionId }}) => nextInstructionId);
+  const promptFocusRequest = useAppSelector(({ environment: { promptFocusRequest }}) => promptFocusRequest);
   const dispatch = useAppDispatch();
   const inputRef = useRef<HTMLTextAreaElement>(null);
   useEffect(() => {inputRef.current?.focus()}, [inputRef]);
+  useEffect(() => {
+    inputRef.current?.focus()
+    if (promptFocusRequest) dispatch(promptHasFocus());
+  }, [promptFocusRequest]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
