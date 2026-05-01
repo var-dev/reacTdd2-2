@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useAppSelector, useAppDispatch } from "../features/redux/hooks.js";
 import { submitScriptName } from "../features/redux/scriptSlice.js";
+import { promptFocusRequest } from "../features/redux/environmentSlice.js";
 
 const ifEnterKey = (e: React.KeyboardEvent<HTMLInputElement>, func: Function) => {
   if (e.key === "Enter") {
@@ -19,6 +20,7 @@ export const ScriptName = () => {
     if (editingScriptName) {
       toggleEditingScriptName();
       dispatch(submitScriptName(updatedScriptName));
+      dispatch(promptFocusRequest())
     }
   };
 

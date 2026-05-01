@@ -87,6 +87,12 @@ describe("withUndoRedo", () => {
     strictEqual(store.getState().script.parsedStatements.length, 2, 'expect parsedStatements.length === 2')
     strictEqual(store.getState().script.parsedStatements[1].name, 'bd', 'expect last command to be bd')
   });
+  it("keeps redo available after unrelated actions", () => {
+    store.dispatch(submitEditLine('fd 5'))
+    store.dispatch(undo())
+    store.dispatch({ type: 'environment/promptFocusRequest' })
+    strictEqual(store.getState().script.canRedo, true, 'expect canRedo true after unrelated action')
+  });
   it("can redo multiple levels", () => {
     store.dispatch(submitEditLine('fd 5'))
     store.dispatch(submitEditLine('rt 90'))

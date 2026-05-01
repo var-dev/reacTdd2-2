@@ -61,6 +61,9 @@ let future: LogoState[] = [];
     }
 
     const newPresent = reducer(state, action);
+    if (newPresent === state) {
+      return state;
+    }
     if (newPresent.error) {
       return {
         ...newPresent,

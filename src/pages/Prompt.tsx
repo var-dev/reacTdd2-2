@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
-import { submitEditLine } from "../features/redux/scriptSlice";
-import { useAppDispatch, useAppSelector } from "../features/redux/hooks";
-import { promptHasFocus } from "../features/redux/environmentSlice";
+import { submitEditLine } from "../features/redux/scriptSlice.js";
+import { useAppDispatch, useAppSelector } from "../features/redux/hooks.js";
+import { promptHasFocus } from "../features/redux/environmentSlice.js";
 
 export const Prompt = () => {
   const nextInstructionId = useAppSelector(({ script: { nextInstructionId }}) => nextInstructionId);

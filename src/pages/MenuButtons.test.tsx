@@ -73,7 +73,7 @@ describe("MenuButtons", () => {
       renderWithStore(<MenuButtons />, store);
       await waitFor(()=>{store.dispatch(submitEditLine("forward 10\n"));})
       await user.click(screen.getByText("Reset"));
-      strictEqual(actionLog.at(-1).type, reset.type)
+      strictEqual(actionLog.at(-2).type, reset.type)
     });
   });
   describe("undo button", () => {

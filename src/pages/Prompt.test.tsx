@@ -145,7 +145,7 @@ describe("prompt focus", async () => {
   });
   it("dispatches an action notifying that the prompt has focused", async () => {
     let promptFocusRequestProgress: boolean[] = [];
-    store.subscribe(() => {
+    const unsubscribe = store.subscribe(() => {
       const {environment} = store.getState()
       promptFocusRequestProgress = [...promptFocusRequestProgress, environment.promptFocusRequest]
     })
@@ -153,5 +153,6 @@ describe("prompt focus", async () => {
     await waitFor(() => deepStrictEqual(promptFocusRequestProgress, [], 'initial focus timeline []'));
     await waitFor(()=>{store.dispatch(promptFocusRequest())})
     await waitFor(() => deepStrictEqual(promptFocusRequestProgress, [true, false], 'promptFocusRequest flipped true on dispatch and false on completion' ));
+    unsubscribe()
   });
 });

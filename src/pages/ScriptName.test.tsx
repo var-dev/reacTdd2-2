@@ -5,9 +5,9 @@ import { store } from "../features/redux/store.js";
 import {type ReactNode } from "react";
 import { type EnhancedStore } from "@reduxjs/toolkit";
 import { Provider } from "react-redux";
-import { render, screen, cleanup} from "@testing-library/react";
+import { render, screen, cleanup, waitFor} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { strictEqual } from "node:assert/strict";
+import { strictEqual, deepStrictEqual } from "node:assert/strict";
 
 const renderWithStore = (
   component: ReactNode,
@@ -76,6 +76,21 @@ describe("ScriptName", () => {
       await user.tab()
       strictEqual(store.getState().script.name, 'new name', 'expect name: new name')
       strictEqual(input.className,'', 'expect no isEditing className')
+    });
+    it("dispatches a prompt focus request", async () => {
+      let promptFocusRequestProgress: boolean[] = [];
+      const unsubscribe = store.subscribe(() => {
+        const {environment} = store.getState()
+        promptFocusRequestProgress = [...promptFocusRequestProgress, environment.promptFocusRequest]
+      })
+      const user = userEvent.setup()
+      renderWithStore(<ScriptName />, store);
+      const input = screen.getByLabelText<HTMLInputElement>('Script name input');
+      await user.click(input)
+      await user.clear(input)
+      await user.type(input,'new name{Enter}')
+      await waitFor(() => deepStrictEqual(promptFocusRequestProgress, [ true, true], 'promptFocusRequest flipped true on name {Enter} and ' ));
+      unsubscribe()
     });
   });
 });
