@@ -17,6 +17,8 @@ interface LogoState {
   allFunctions: Command[];
   nextInstructionId: number;
   name: string;
+  canUndo?: boolean;
+  canRedo?: boolean;
   error?: {description:string}
   [key: string]: unknown;
 }
