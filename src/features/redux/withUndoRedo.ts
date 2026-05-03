@@ -1,12 +1,20 @@
-import { type UnknownAction } from "@reduxjs/toolkit";
-import { type ScriptReducer } from "./store.js";
+import { type Reducer, type UnknownAction } from "@reduxjs/toolkit";
 import { undo, reset, redo, submitEditLine } from "./scriptSlice.js";
 
+type UndoEnabledLogoState = LogoState & {
+  canUndo: boolean;
+  canRedo: boolean;
+};
 
-export const withUndoRedo = (reducer: ScriptReducer) => {
+type ScriptReducer = Reducer<LogoState, UnknownAction>;
+type UndoEnabledScriptReducer = Reducer<UndoEnabledLogoState, UnknownAction, LogoState>;
+
+export const withUndoRedo = (reducer: ScriptReducer): UndoEnabledScriptReducer => {
   let past: LogoState[] = [];
   let future: LogoState[] = [];
-  return (state: LogoState , action: UnknownAction) => {
+  return (state: LogoState | undefined, action: UnknownAction): UndoEnabledLogoState => {
+    const present = state ?? reducer(undefined, action);
+
     if (reset.match(action)) {
       past = [];
       future = [];
@@ -19,14 +27,14 @@ export const withUndoRedo = (reducer: ScriptReducer) => {
     if (undo.match(action)) {
       if (past.length === 0) {
         return {
-          ...state,
+          ...present,
           canUndo: false,
           canRedo: future.length > 0,
         };
       }
       const tail = past.at(-1)!;
       past = past.slice(0, -1);
-      future = [state, ...future];
+      future = [present, ...future];
       return {
         ...tail,
         canUndo: past.length > 0,
@@ -36,14 +44,14 @@ export const withUndoRedo = (reducer: ScriptReducer) => {
     if (redo.match(action)) {
       if (future.length === 0) {
         return {
-          ...state,
+          ...present,
           canUndo: past.length > 0,
           canRedo: false,
         };
       }
       const head = future[0];
       future = future.slice(1);
-      past = [...past, state];
+      past = [...past, present];
       return {
         ...head,
         canUndo: true,
@@ -59,7 +67,7 @@ export const withUndoRedo = (reducer: ScriptReducer) => {
           canRedo: future.length > 0,
         };
       }
-      past = [...past, state];
+      past = [...past, present];
       future = [];
       return {
         ...newPresent,
