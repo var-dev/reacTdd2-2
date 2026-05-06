@@ -13,19 +13,28 @@ const movementSpeed = 5;
 
 export const Drawing = () => {
   const { drawCommands } = useAppSelector(({ script }) => script);
-  const lineCommands = drawCommands.filter(isDrawLineCommand) as DrawCommandLinear[];
   const [turtle, setTurtle] = useState({x: 0, y: 0, angle: 0});
-  const commandToAnimate = drawCommands[0] as DrawCommandLinear;
+  const [animatingCommandIndex, setAnimatingCommandIndex] = useState(0);
+  const lineCommands = drawCommands
+    .slice(0, animatingCommandIndex)
+    .filter(isDrawLineCommand) as DrawCommandLinear[];
+  const commandToAnimate = drawCommands[animatingCommandIndex] as DrawCommandLinear;
   const isDrawingLine = commandToAnimate && isDrawLineCommand(commandToAnimate);
   useEffect(() => {
     let duration: number;
+    let start: number | undefined;
     const handleDrawLineFrame = (time: number) => {
-      const { x1, x2, y1, y2 } = commandToAnimate;
-      setTurtle(turtle => ({
-        ...turtle,
-        x: x1 + ((x2 - x1) * (time / duration)),
-        y: y1 + ((y2 - y1) * (time / duration)),
-      }));
+      if (start === undefined) start = time;
+      if (time < start + duration) {
+        const elapsed = time - start;
+        const { x1, x2, y1, y2 } = commandToAnimate;
+        setTurtle(turtle => ({
+          ...turtle,
+          x: x1 + ((x2 - x1) * (elapsed / duration)),
+          y: y1 + ((y2 - y1) * (elapsed / duration)),
+      }))} else {
+        setAnimatingCommandIndex(i => i + 1)
+      }
     };
     duration = movementSpeed * distance(commandToAnimate);
     if (isDrawingLine) window.requestAnimationFrame(handleDrawLineFrame)
