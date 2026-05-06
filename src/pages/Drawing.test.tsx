@@ -1,17 +1,30 @@
 import { describe, it, beforeEach, mock } from "node:test";
 import '../../test/builders/domSetup.js'
-import { render, screen, cleanup } from "@testing-library/react";
+import { render, screen, cleanup, waitFor } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { configureStore, type EnhancedStore } from "@reduxjs/toolkit";
 import type { ReactNode } from "react";
 import { type Middleware } from "@reduxjs/toolkit";
 import { deepStrictEqual, strictEqual } from "assert";
 import { horizontalLine, verticalLine } from "./sampleInstructions.js";
+import type { AnimatedLineProps } from "./AnimatedLine.js";
 
 //@ts-expect-error
-const mockTurtle = mock.fn((...args: any[]) => <div id="Turtle" data-testid="Turtle" />);
+const mockTurtle = mock.fn(({ x, y, angle }: TurtleState) => <div id="Turtle" data-testid="Turtle" x={x} y={y} angle={angle}/>);
 //@ts-expect-error
 const mockStaticLines = mock.fn((...args: any[]) => <div id="StaticLines" data-testid="StaticLines" />);
+
+const fakeAnimatedLine = (props: AnimatedLineProps) => {
+    void(props)
+    return <div data-testid='animatedLine' />
+  }
+const realAnimatedLine = (await import ("./AnimatedLine.js")).AnimatedLine
+const mockAnimatedLine = mock.fn((props:AnimatedLineProps)=>fakeAnimatedLine(props))
+mock.module("./AnimatedLine.js", {
+  namedExports: {
+    AnimatedLine: mockAnimatedLine
+  }
+})
 
 mock.module("./Turtle.js", {
   namedExports: { 
@@ -68,6 +81,7 @@ describe("Drawing", () => {
     cleanup();
     mockTurtle.mock.resetCalls()
     mockStaticLines.mock.resetCalls()
+    mockAnimatedLine.mock.resetCalls()
   });
 
   it("renders an svg inside div#viewport", async () => {
@@ -87,8 +101,17 @@ describe("Drawing", () => {
     renderWithStore(<Drawing />, store).container as unknown as HTMLBodyElement;
     strictEqual(screen.getByTestId<HTMLDivElement>('Turtle').tagName, 'div')
     strictEqual(mockTurtle.mock.calls.length, 1, "Turtle component is called once")
-    deepStrictEqual(mockTurtle.mock.calls[0].arguments[0], { x: 10, y: 20, angle: 30 }, "passes the turtle x, y and angle as props to Turtle")
   });
+  it("initially places the turtle at 0,0 with angle 0", async ()=>{
+    const {Drawing} = (await import("./Drawing.js"))
+    const {store} = createTestStoreWithLogger({script: { drawCommands: [] }} as unknown as LogoState);
+    renderWithStore(<Drawing />, store).container as unknown as HTMLBodyElement;
+    const turtle = await waitFor(()=>screen.getByTestId<HTMLDivElement>('Turtle'))
+    // deepStrictEqual(mockTurtle.mock.calls[0].arguments[0], { x: 0, y: 0, angle: 30 }, "passes the turtle x, y and angle as props to Turtle")
+    strictEqual(turtle.getAttribute('x'), '0', 'expect attr x=0')
+    strictEqual(turtle.getAttribute('y'), '0', 'expect attr y=0')
+    strictEqual(turtle.getAttribute('angle'), '0', 'expect attr angle=0')
+  })
 
   it("renders StaticLines within the svg", async () => {
     const { Drawing } = (await import("./Drawing.js"))
@@ -120,6 +143,40 @@ describe("Drawing", () => {
         ]
       },
       "sends only line commands to StaticLines")
+  });
+  describe("movement animation", () => {
+    window.requestAnimationFrame = () => 0;
+    const horizontalLineDrawn = {
+      script: {
+        drawCommands: [horizontalLine],
+        turtle: { x: 0, y: 0, angle: 0 },
+      },
+    };
+    it("invokes requestAnimationFrame when the timeout fires", async () => {
+      const { Drawing } = (await import("./Drawing.js"))
+      const { store } = createTestStoreWithLogger(horizontalLineDrawn as unknown as LogoState);
+      const RAF = mock.method(window, "requestAnimationFrame");
+      renderWithStore(<Drawing />, store).container as unknown as HTMLBodyElement;
+      strictEqual(RAF.mock.callCount(), 1);
+    });
+
+    it("renders AnimatedLine with turtle at the start position when the animation has run for 0s", async () => {
+      const { Drawing } = (await import("./Drawing.js"))
+      const { store } = createTestStoreWithLogger(horizontalLineDrawn as unknown as LogoState);
+      const RAF = mock.method(window, "requestAnimationFrame");
+      renderWithStore(<Drawing />, store).container as unknown as HTMLBodyElement;
+      strictEqual(RAF.mock.callCount(), 1, 'RAF called once');
+      const rafCallBack = RAF.mock.calls[0].arguments[0]
+      deepStrictEqual(rafCallBack.name, 'handleDrawLineFrame', 'expect handleDrawLineFrame callback')
+      await waitFor(()=>rafCallBack(9987657))
+      await waitFor(()=>{strictEqual(mockAnimatedLine.mock.callCount(), 2)})
+      deepStrictEqual(mockAnimatedLine.mock.calls[1].arguments[0], 
+        {
+          commandToAnimate: horizontalLine,
+          turtle: { x: 100, y: 100, angle: 0 }
+        }
+      );
+    });
   });
 });
 

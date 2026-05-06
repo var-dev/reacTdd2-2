@@ -1,5 +1,5 @@
 
-type AnimatedLineProps = {
+export type AnimatedLineProps = {
     commandToAnimate: DrawCommandLinear;
     turtle: TurtleState;
 }

@@ -4,8 +4,6 @@ import '../../test/builders/domSetup.js'
 import { render, cleanup, screen } from "@testing-library/react";
 import {
   horizontalLine,
-  verticalLine,
-  diagonalLine,
 } from "./sampleInstructions.js";
 import { strictEqual } from "assert";
 import {AnimatedLine} from "./AnimatedLine.js";
