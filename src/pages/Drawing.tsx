@@ -4,8 +4,12 @@ import { Turtle } from "./Turtle.js";
 import { StaticLines } from "./StaticLines.js";
 import { AnimatedLine } from "./AnimatedLine.js";
 
-const isDrawLineCommand = (command: DrawCommand) =>
-  command.drawCommand === "drawLine";
+const isDrawLineCommand = (command: DrawCommand) => command.drawCommand === "drawLine";
+const distance = (command: DrawCommandLinear) => {
+  const { x1, y1, x2, y2 } = command || {x1: 0, x2: 0, y1: 0, y2: 0};
+  return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1))
+}
+const movementSpeed = 5;
 
 export const Drawing = () => {
   const { drawCommands } = useAppSelector(({ script }) => script);
@@ -14,13 +18,16 @@ export const Drawing = () => {
   const commandToAnimate = drawCommands[0] as DrawCommandLinear;
   const isDrawingLine = commandToAnimate && isDrawLineCommand(commandToAnimate);
   useEffect(() => {
+    let duration: number;
     const handleDrawLineFrame = (time: number) => {
+      const { x1, x2, y1, y2 } = commandToAnimate;
       setTurtle(turtle => ({
         ...turtle,
-        x: commandToAnimate.x1,
-        y: commandToAnimate.y1,
+        x: x1 + ((x2 - x1) * (time / duration)),
+        y: y1 + ((y2 - y1) * (time / duration)),
       }));
     };
+    duration = movementSpeed * distance(commandToAnimate);
     if (isDrawingLine) window.requestAnimationFrame(handleDrawLineFrame)
   },[commandToAnimate, isDrawingLine])
   return (
@@ -32,7 +39,9 @@ export const Drawing = () => {
       >
         <StaticLines lineCommands={lineCommands} />
         <Turtle {...turtle} />
-        <AnimatedLine commandToAnimate={commandToAnimate} turtle={turtle}/>
+        {isDrawingLine 
+          ? <AnimatedLine commandToAnimate={commandToAnimate} turtle={turtle}/>
+          : null} 
       </svg>
     </div>
   );
