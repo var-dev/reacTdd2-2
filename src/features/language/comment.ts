@@ -4,7 +4,7 @@ export const comment: Command = {
   initial: {},
   isWriteProtected: true,
   parameters: [],
-  parseToken: (state: LogoState, token: Token): ParsedResult => {
+  parseToken: (state: LogoState, token: Token) => {
     void state;
     if (
       token.type === "whitespace" &&

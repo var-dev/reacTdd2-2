@@ -14,7 +14,7 @@ export const AnimatedLine = (
       y1={y1} 
       x2={x} 
       y2={y}
-      stroke-width="2"
+      strokeWidth="2"
       stroke="black"
     ></line>
 }

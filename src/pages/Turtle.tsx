@@ -8,7 +8,7 @@ export const Turtle = ({ x, y, angle }: TurtleState) => {
     <polygon
       points={buildPoints(x, y)}
       fill="green"
-      stroke-width="2"
+      strokeWidth="2"
       stroke="black"
       transform={`rotate(${buildRotation(
         angle,

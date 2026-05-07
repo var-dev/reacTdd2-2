@@ -12,7 +12,11 @@ export const store = configureStore({
   },
   preloadedState: {script: load()?.script ?? initialState} as { script: LogoState },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(save),
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredPaths: ['script.allFunctions', 'script.parsedStatements'],
+      },
+    }).concat(save),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

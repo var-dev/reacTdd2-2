@@ -21,24 +21,28 @@ export const Drawing = () => {
   const commandToAnimate = drawCommands[animatingCommandIndex] as DrawCommandLinear;
   const isDrawingLine = commandToAnimate && isDrawLineCommand(commandToAnimate);
   useEffect(() => {
-    let duration: number;
-    let start: number | undefined;
+    if (!isDrawingLine || !commandToAnimate) return
+    let duration = movementSpeed * distance(commandToAnimate);
+    let start: number | null = null;
+    const { x1, x2, y1, y2 } = commandToAnimate;
     const handleDrawLineFrame = (time: number) => {
-      if (start === undefined) start = time;
-      if (time < start + duration) {
-        const elapsed = time - start;
-        const { x1, x2, y1, y2 } = commandToAnimate;
+      console.log('RAF: ', time)
+      if (start === null) start = time;
+      const elapsed = time - start;
+      if (elapsed < duration) {
         setTurtle(turtle => ({
           ...turtle,
           x: x1 + ((x2 - x1) * (elapsed / duration)),
           y: y1 + ((y2 - y1) * (elapsed / duration)),
-      }))} else {
+        }))
+        window.requestAnimationFrame(handleDrawLineFrame)
+      } else {
+        // setTurtle((turtle) => ({ ...turtle, x: x2, y: y2 }));
         setAnimatingCommandIndex(i => i + 1)
       }
     };
-    duration = movementSpeed * distance(commandToAnimate);
-    if (isDrawingLine) window.requestAnimationFrame(handleDrawLineFrame)
-  },[commandToAnimate, isDrawingLine])
+    window.requestAnimationFrame(handleDrawLineFrame)
+  }, [commandToAnimate, isDrawingLine])
   return (
     <div id="viewport">
       <svg

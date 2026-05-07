@@ -14,7 +14,7 @@ export const StaticLines = ({ lineCommands }: { lineCommands: LineCommand[] }) =
       y1={y1}
       x2={x2}
       y2={y2}
-      stroke-width="2"
+      strokeWidth="2"
       stroke="black"
     />
   ));
