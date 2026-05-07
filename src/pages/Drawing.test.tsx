@@ -124,6 +124,7 @@ describe("Drawing", () => {
   });
   describe("movement animation", () => {
     window.requestAnimationFrame = () => 0;
+    window.cancelAnimationFrame = () => void 0;
     const horizontalLineDrawn = {
       script: {
         drawCommands: [horizontalLine],
@@ -254,13 +255,24 @@ describe("Drawing", () => {
       it("calls cancelAnimationFrame on reset", async () => {
         const { Drawing } = (await import("./Drawing.js"))
         const { store } = createTestStoreWithLogger({ script: {drawCommands: [horizontalLine]}} as unknown as LogoState);
+        const RAF = mock.method(window, "requestAnimationFrame",(...args:any[])=>args ? 55 : 42);
+        const CAF = mock.method(window, "cancelAnimationFrame");
+        renderWithStore(<Drawing />, store).container as unknown as HTMLBodyElement;
+        strictEqual(RAF.mock.callCount(), 1, 'RAF called once');
+        const rafCallBack = RAF.mock.calls[0].arguments[0]
+        deepStrictEqual(rafCallBack.name, 'handleDrawLineFrame', 'expect handleDrawLineFrame callback')
+        await waitFor(() => rafCallBack(0))
+        await waitFor(() => rafCallBack(505))
+        await waitFor(() => strictEqual(CAF.mock.callCount(), 1))
+      })
+      it("does not call cancelAnimationFrame if no line animating", async () => {
+        const { Drawing } = (await import("./Drawing.js"))
+        const { store } = createTestStoreWithLogger({ script: {drawCommands: []}} as unknown as LogoState);
         const RAF = mock.method(window, "requestAnimationFrame");
         const CAF = mock.method(window, "cancelAnimationFrame");
         renderWithStore(<Drawing />, store).container as unknown as HTMLBodyElement;
-        strictEqual(CAF.mock.callCount(), 1, 'CAF called once');
-        // const rafCallBack = RAF.mock.calls[0].arguments[0]
-        // deepStrictEqual(rafCallBack.name, 'handleDrawLineFrame', 'expect handleDrawLineFrame callback')
-
+        await waitFor(() => strictEqual(RAF.mock.callCount(), 0, 'RAF not called'));
+        await waitFor(() => strictEqual(CAF.mock.callCount(), 0, 'CAF not called'))
       })
     })
   });

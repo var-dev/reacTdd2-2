@@ -25,8 +25,8 @@ export const Drawing = () => {
     let duration = movementSpeed * distance(commandToAnimate);
     let start: number | null = null;
     const { x1, x2, y1, y2 } = commandToAnimate;
+    let cancelToken: number | undefined = undefined
     const handleDrawLineFrame = (time: number) => {
-      console.log('RAF: ', time)
       if (start === null) start = time;
       const elapsed = time - start;
       if (elapsed < duration) {
@@ -35,13 +35,16 @@ export const Drawing = () => {
           x: x1 + ((x2 - x1) * (elapsed / duration)),
           y: y1 + ((y2 - y1) * (elapsed / duration)),
         }))
-        window.requestAnimationFrame(handleDrawLineFrame)
+        cancelToken = window.requestAnimationFrame(handleDrawLineFrame)
       } else {
         // setTurtle((turtle) => ({ ...turtle, x: x2, y: y2 }));
         setAnimatingCommandIndex(i => i + 1)
       }
     };
-    window.requestAnimationFrame(handleDrawLineFrame)
+    cancelToken = window.requestAnimationFrame(handleDrawLineFrame)
+    return () => {
+      if (cancelToken) window.cancelAnimationFrame(cancelToken)
+    }
   }, [commandToAnimate, isDrawingLine])
   return (
     <div id="viewport">
