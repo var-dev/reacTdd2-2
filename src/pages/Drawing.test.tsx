@@ -6,9 +6,12 @@ import { configureStore, type EnhancedStore } from "@reduxjs/toolkit";
 import type { ReactNode } from "react";
 import { type Middleware } from "@reduxjs/toolkit";
 import { deepStrictEqual, strictEqual } from "assert";
-import { horizontalLine, verticalLine } from "./sampleInstructions.js";
+import { horizontalLine, verticalLine, rotate90 } from "./sampleInstructions.js";
 import type { AnimatedLineProps } from "./AnimatedLine.js";
 import { ok } from "assert/strict";
+
+window.requestAnimationFrame = () => 0;
+window.cancelAnimationFrame = () => void 0;
 
 //@ts-expect-error
 const mockTurtle = mock.fn(({ x, y, angle }: TurtleState) => <polygon id="Turtle" data-testid="Turtle" x={x} y={y} angle={angle}/>);
@@ -123,8 +126,6 @@ describe("Drawing", () => {
     await waitFor(()=>{strictEqual(mockStaticLines.mock.calls.length, 1, "StaticLines component is called once")})
   });
   describe("movement animation", () => {
-    window.requestAnimationFrame = () => 0;
-    window.cancelAnimationFrame = () => void 0;
     const horizontalLineDrawn = {
       script: {
         drawCommands: [horizontalLine],
@@ -259,10 +260,6 @@ describe("Drawing", () => {
         const CAF = mock.method(window, "cancelAnimationFrame");
         const {unmount} = renderWithStore(<Drawing />, store);
         strictEqual(RAF.mock.callCount(), 1, 'RAF called once');
-        // const rafCallBack = RAF.mock.calls[0].arguments[0]
-        // deepStrictEqual(rafCallBack.name, 'handleDrawLineFrame', 'expect handleDrawLineFrame callback')
-        // await waitFor(() => rafCallBack(0))
-        // await waitFor(() => rafCallBack(505))
         unmount()
         await waitFor(() => {
           strictEqual(CAF.mock.callCount(), 1, 'CAF called once')
@@ -281,5 +278,100 @@ describe("Drawing", () => {
       })
     })
   });
+
+  describe("rotation animation", () => {
+    const rotationPerformed = {
+      script: { drawCommands: [rotate90] },
+    };
+    it("rotates the turtle", async () => {
+      const { Drawing } = (await import("./Drawing.js"))
+      const { store } = createTestStoreWithLogger(rotationPerformed as unknown as LogoState);
+      const RAF = mock.method(window, "requestAnimationFrame", ()=>void 0);
+      renderWithStore(<Drawing />, store);
+      strictEqual(RAF.mock.callCount(), 1, 'RAF called once');
+      const rafCallBack = RAF.mock.calls[0].arguments[0]!
+      deepStrictEqual(rafCallBack.name, 'handleRotationFrame', 'expect handleRotationFrame callback')
+      await waitFor(() => rafCallBack(0))
+      await waitFor(() => rafCallBack(500))
+      strictEqual(mockTurtle.mock.calls.length, 3)
+      deepStrictEqual(mockTurtle.mock.calls[2].arguments[0],
+        {
+          x: 0,
+          y: 0,
+          angle: 90
+        }
+      );
+    });
+    it("rotates part-way at a speed of 1s per 180 degrees", async () => {
+      const { Drawing } = (await import("./Drawing.js"))
+      const { store } = createTestStoreWithLogger(rotationPerformed as unknown as LogoState);
+      const RAF = mock.method(window, "requestAnimationFrame", ()=>void 0);
+      renderWithStore(<Drawing />, store);
+      strictEqual(RAF.mock.callCount(), 1, 'RAF called once');
+      const rafCallBack = RAF.mock.calls[0].arguments[0]!
+      deepStrictEqual(rafCallBack.name, 'handleRotationFrame', 'expect handleRotationFrame callback')
+      await waitFor(() => rafCallBack(12345))
+      await waitFor(() => rafCallBack(12345+250))
+      strictEqual(mockTurtle.mock.calls.length, 3)
+      deepStrictEqual(mockTurtle.mock.calls[2].arguments[0],
+        {
+          x: 0,
+          y: 0,
+          angle: 45
+        }
+      );
+    });
+    it("invokes requestAnimationFrame repeatedly until the duration is reached", async () => {
+      const { Drawing } = (await import("./Drawing.js"))
+      const { store } = createTestStoreWithLogger(rotationPerformed as unknown as LogoState);
+      const RAF = mock.method(window, "requestAnimationFrame", ()=>void 0);
+      renderWithStore(<Drawing />, store);
+      strictEqual(RAF.mock.callCount(), 1, 'RAF called once');
+      const rafCallBack = RAF.mock.calls[0].arguments[0]!
+      deepStrictEqual(rafCallBack.name, 'handleRotationFrame', 'expect handleRotationFrame callback')
+      await waitFor(() => rafCallBack(0))
+      await waitFor(() => rafCallBack(250))
+      await waitFor(() => rafCallBack(500))
+      strictEqual(mockTurtle.mock.calls.length, 4)
+    });
+    it("animates the next command once rotation is complete", async () => {
+      let rafId = 0
+      const { Drawing } = (await import("./Drawing.js"))
+      const { store } = createTestStoreWithLogger({ script: {drawCommands: [rotate90, horizontalLine], turtle: {x: 0, y: 0, angle: 0}}} as unknown as LogoState);
+      const RAF = mock.method(window, "requestAnimationFrame", (cb: Function)=>rafId++);
+      renderWithStore(<Drawing />, store).container as unknown as HTMLBodyElement;
+      strictEqual(RAF.mock.callCount(), 1, 'RAF called once');
+      let rafCallBack = RAF.mock.calls[0].arguments[0]
+      strictEqual(rafCallBack.name, 'handleRotationFrame', 'expect handleRotationFrame callback')
+
+      await waitFor(() => rafCallBack(0))
+      await waitFor(()=>{strictEqual(RAF.mock.callCount(), 2, 'RAF called again #2');})
+      rafCallBack = RAF.mock.calls[1].arguments[0]
+      strictEqual(rafCallBack.name, 'handleRotationFrame', 'expect handleRotationFrame callback #2') 
+
+      await waitFor(() => rafCallBack(500))
+      await waitFor(()=>{strictEqual(RAF.mock.callCount(), 3, 'RAF called again #3');})
+      rafCallBack = RAF.mock.calls[2].arguments[0]
+      strictEqual(rafCallBack.name, 'handleDrawLineFrame', 'expect handleDrawLineFrame callback #3') 
+
+      await waitFor(() => rafCallBack(0))
+      await waitFor(()=>{strictEqual(RAF.mock.callCount(), 4, 'RAF called again #4');})
+      rafCallBack = RAF.mock.calls[3].arguments[0]
+      strictEqual(rafCallBack.name, 'handleDrawLineFrame', 'expect handleDrawLineFrame callback #4') 
+
+      await waitFor(() => rafCallBack(250))
+      await waitFor(()=>{strictEqual(RAF.mock.callCount(), 5, 'RAF called again #5');})
+      rafCallBack = RAF.mock.calls[4].arguments[0]
+      strictEqual(rafCallBack.name, 'handleDrawLineFrame', 'expect handleDrawLineFrame callback #5')
+      await waitFor(() => { strictEqual(mockTurtle.mock.callCount(), 5, 'Turtle called times') })
+      await waitFor(() => { strictEqual(mockAnimatedLine.mock.callCount(), 3, 'AnimatedLine called times')})
+      deepStrictEqual(mockAnimatedLine.mock.calls[2].arguments[0],
+        {
+          commandToAnimate: horizontalLine,
+          turtle: { x: 150, y: 100, angle: 90 }
+        }
+      );      
+    })
+  })
 });
 
