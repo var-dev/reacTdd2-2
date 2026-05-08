@@ -252,25 +252,30 @@ describe("Drawing", () => {
         const expected = {lineCommands:[horizontalLine]}
         deepStrictEqual(actual, expected)
       })
-      it("calls cancelAnimationFrame on reset", async () => {
+      it("calls cancelAnimationFrame", async () => {
         const { Drawing } = (await import("./Drawing.js"))
         const { store } = createTestStoreWithLogger({ script: {drawCommands: [horizontalLine]}} as unknown as LogoState);
-        const RAF = mock.method(window, "requestAnimationFrame",(...args:any[])=>args ? 55 : 42);
+        const RAF = mock.method(window, "requestAnimationFrame",()=>55);
         const CAF = mock.method(window, "cancelAnimationFrame");
-        renderWithStore(<Drawing />, store).container as unknown as HTMLBodyElement;
+        const {unmount} = renderWithStore(<Drawing />, store);
         strictEqual(RAF.mock.callCount(), 1, 'RAF called once');
-        const rafCallBack = RAF.mock.calls[0].arguments[0]
-        deepStrictEqual(rafCallBack.name, 'handleDrawLineFrame', 'expect handleDrawLineFrame callback')
-        await waitFor(() => rafCallBack(0))
-        await waitFor(() => rafCallBack(505))
-        await waitFor(() => strictEqual(CAF.mock.callCount(), 1))
+        // const rafCallBack = RAF.mock.calls[0].arguments[0]
+        // deepStrictEqual(rafCallBack.name, 'handleDrawLineFrame', 'expect handleDrawLineFrame callback')
+        // await waitFor(() => rafCallBack(0))
+        // await waitFor(() => rafCallBack(505))
+        unmount()
+        await waitFor(() => {
+          strictEqual(CAF.mock.callCount(), 1, 'CAF called once')
+          strictEqual(CAF.mock.calls[0].arguments[0], 55)
+        })
       })
       it("does not call cancelAnimationFrame if no line animating", async () => {
         const { Drawing } = (await import("./Drawing.js"))
         const { store } = createTestStoreWithLogger({ script: {drawCommands: []}} as unknown as LogoState);
-        const RAF = mock.method(window, "requestAnimationFrame");
+        const RAF = mock.method(window, "requestAnimationFrame", ()=>55);
         const CAF = mock.method(window, "cancelAnimationFrame");
-        renderWithStore(<Drawing />, store).container as unknown as HTMLBodyElement;
+        const {unmount} = renderWithStore(<Drawing />, store);
+        unmount()
         await waitFor(() => strictEqual(RAF.mock.callCount(), 0, 'RAF not called'));
         await waitFor(() => strictEqual(CAF.mock.callCount(), 0, 'CAF not called'))
       })

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAppSelector } from "../features/redux/hooks.js";
 import { Turtle } from "./Turtle.js";
 import { StaticLines } from "./StaticLines.js";
@@ -12,6 +12,7 @@ const distance = (command: DrawCommandLinear) => {
 const movementSpeed = 5;
 
 export const Drawing = () => {
+  const cancelToken = useRef<number|null>(null)
   const { drawCommands } = useAppSelector(({ script }) => script);
   const [turtle, setTurtle] = useState({x: 0, y: 0, angle: 0});
   const [animatingCommandIndex, setAnimatingCommandIndex] = useState(0);
@@ -25,7 +26,6 @@ export const Drawing = () => {
     let duration = movementSpeed * distance(commandToAnimate);
     let start: number | null = null;
     const { x1, x2, y1, y2 } = commandToAnimate;
-    let cancelToken: number | undefined = undefined
     const handleDrawLineFrame = (time: number) => {
       if (start === null) start = time;
       const elapsed = time - start;
@@ -35,15 +35,15 @@ export const Drawing = () => {
           x: x1 + ((x2 - x1) * (elapsed / duration)),
           y: y1 + ((y2 - y1) * (elapsed / duration)),
         }))
-        cancelToken = window.requestAnimationFrame(handleDrawLineFrame)
+        cancelToken.current = window.requestAnimationFrame(handleDrawLineFrame)
       } else {
         // setTurtle((turtle) => ({ ...turtle, x: x2, y: y2 }));
         setAnimatingCommandIndex(i => i + 1)
       }
     };
-    cancelToken = window.requestAnimationFrame(handleDrawLineFrame)
+    cancelToken.current = window.requestAnimationFrame(handleDrawLineFrame)
     return () => {
-      if (cancelToken) window.cancelAnimationFrame(cancelToken)
+      if (cancelToken.current !== null) window.cancelAnimationFrame(cancelToken.current!)
     }
   }, [commandToAnimate, isDrawingLine])
   return (
