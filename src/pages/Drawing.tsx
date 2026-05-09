@@ -15,7 +15,7 @@ const rotateSpeed = 1000 / 180;
 
 export const Drawing = () => {
   const cancelToken = useRef<number|null>(null)
-  const { drawCommands } = useAppSelector(({ script }) => script);
+  const { drawCommands, turtle: turtleState } = useAppSelector(({ script }) => script);
   const [turtle, setTurtle] = useState({x: 0, y: 0, angle: 0});
   const [animatingCommandIndex, setAnimatingCommandIndex] = useState(0);
   const lineCommands = drawCommands
@@ -24,6 +24,7 @@ export const Drawing = () => {
   const commandToAnimate = drawCommands[animatingCommandIndex] as DrawCommand;
   const isDrawingLine = commandToAnimate && isDrawLineCommand(commandToAnimate);
   const isRotating = commandToAnimate && isRotateCommand(commandToAnimate);
+  useEffect(() => {setTurtle(turtleState)}, [drawCommands])
   useEffect(() => {
       let duration = 0;
       let start: number | null = null;
@@ -40,7 +41,7 @@ export const Drawing = () => {
         }))
         cancelToken.current = window.requestAnimationFrame(handleDrawLineFrame)
       } else {
-        // setTurtle((turtle) => ({ ...turtle, x: x2, y: y2 }));
+        setTurtle((turtle) => ({ ...turtle, x: x2, y: y2 }));
         setAnimatingCommandIndex(i => i + 1)
       }
     };
@@ -54,7 +55,6 @@ export const Drawing = () => {
           ...turtle,
           angle: previousAngle + (newAngle - previousAngle) * elapsed / duration
         }))
-        console.log('+ROTATING STILL: ', animatingCommandIndex,time)
         cancelToken.current = window.requestAnimationFrame(handleRotationFrame)
       } else {
         setTurtle(turtle => ({
@@ -62,7 +62,6 @@ export const Drawing = () => {
           angle: newAngle
         }));
         setAnimatingCommandIndex(i => i + 1)
-        console.log('+ROTATING DONE: ', animatingCommandIndex,time)
       }
     };
     if (isDrawingLine) {
@@ -77,7 +76,7 @@ export const Drawing = () => {
     return () => {
       if (cancelToken.current !== null) window.cancelAnimationFrame(cancelToken.current!)
     }
-  }, [commandToAnimate, isDrawingLine])
+  }, [commandToAnimate, isDrawingLine, isRotating])
   return (
     <div id="viewport">
       <svg
