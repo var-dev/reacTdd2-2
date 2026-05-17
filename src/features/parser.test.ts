@@ -156,7 +156,7 @@ describe("parseStatement", () => {
         "unknown 90",
         initialState as LogoState
       );
-      strictEqual(result.error.line, "unknown 90");
+      strictEqual(result.error!.line, "unknown 90");
     });
 
     it("returns a basic error for an unknown command", () => {
@@ -164,8 +164,8 @@ describe("parseStatement", () => {
         "unknown 90",
         initialState as LogoState
       );
-      strictEqual(result.error.description, "Unknown function: unknown");
-      deepStrictEqual(result.error.position, {
+      strictEqual(result.error!.description, "Unknown function: unknown");
+      deepStrictEqual(result.error!.position, {
         end: 6,
         start: 0,
       });
@@ -176,8 +176,8 @@ describe("parseStatement", () => {
         "still-unknown 90",
         initialState as LogoState
       );
-      strictEqual(result.error.description, "Unknown function: still-unknown");
-      deepStrictEqual(result.error.position, {
+      strictEqual(result.error!.description, "Unknown function: still-unknown");
+      deepStrictEqual(result.error!.position, {
         end: 12,
         start: 0,
       });
@@ -197,7 +197,7 @@ describe("parseStatement", () => {
         "forward notnumber",
         initialState as LogoState
       );
-      strictEqual(result.error.description, "Argument is not an integer");
+      strictEqual(result.error!.description, "Argument is not an integer");
     });
   });
 
@@ -229,7 +229,7 @@ describe("parseStatement", () => {
     });
 
     it("accepts multiple commands on the same line", () => {
-      let state = parseStatement(
+      const state = parseStatement(
         "forward 10 backward 10",
         initialState as LogoState
       );
@@ -283,7 +283,7 @@ describe("parseStatement", () => {
 
   describe("repeat", () => {
     it("repeats an instruction many times", () => {
-      let state = parseStatement(
+      const state = parseStatement(
         "repeat 3 [ forward 10 ]",
         initialState as LogoState
       );
@@ -316,7 +316,7 @@ describe("parseStatement", () => {
     });
 
     it("repeats multiple instructions", () => {
-      let state = parseStatement(
+      const state = parseStatement(
         "repeat 2 [ forward 10 backward 10 ]",
         initialState as LogoState
       );
@@ -357,19 +357,19 @@ describe("parseStatement", () => {
     });
 
     it("returns an error if the first argument is not a number", () => {
-      let state = parseStatement(
+      const state = parseStatement(
         "repeat c [ ]",
         initialState as LogoState
       );
-      strictEqual(state.error.description, "Argument is not an integer");
+      strictEqual(state.error!.description, "Argument is not an integer");
     });
 
     it("returns an error if the last instruction is not complete", () => {
-      let state = parseStatement(
+      const state = parseStatement(
         "repeat 2 [ forward ]",
         initialState as LogoState
       );
-      strictEqual(state.error.description, "The last command is not complete");
+      strictEqual(state.error!.description, "The last command is not complete");
     });
   });
 
@@ -444,7 +444,7 @@ describe("parseStatement", () => {
         "to to end",
         initialState as LogoState
       );
-      strictEqual(state.error.description, "Cannot override the built-in function 'to'");
+      strictEqual(state.error!.description, "Cannot override the built-in function 'to'");
     });
 
     it("can override user-defined functions", () => {
@@ -466,7 +466,7 @@ describe("parseStatement", () => {
     });
 
     it("allows multi-line function definitions", () => {
-      let state = parseStatement(
+      const state = parseStatement(
         "to abc\n",
         initialState as LogoState
       );
@@ -477,7 +477,7 @@ describe("parseStatement", () => {
 
   describe("case-insensitivity", () => {
     it("matches uppercase forward command", () => {
-      let result = parseStatement(
+      const result = parseStatement(
         "FORWARD 10",
         initialState as LogoState
       );
@@ -507,7 +507,7 @@ describe("parseStatement", () => {
 
   describe("aliases", () => {
     it("matches fd alias", () => {
-      let result = parseStatement(
+      const result = parseStatement(
         "fd 10",
         initialState as LogoState
       );
@@ -516,6 +516,7 @@ describe("parseStatement", () => {
   });
 
   describe("tokenizing", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let tokenSpy = mock.fn((...args: any[])=>{void(args); return {}});
 
     beforeEach(() => {
@@ -606,6 +607,7 @@ describe("parseStatement", () => {
         parsedTokens: [{ lineNumber: 123 }],
       } as unknown as LogoState);
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ok(result.parsedTokens.some((parsedToken: any) =>
         parsedToken.type === "token" &&
         parsedToken.text === ";" &&

@@ -1,6 +1,6 @@
 import { promptFocusRequest } from "../features/redux/environmentSlice.js";
 import { useAppSelector, useAppDispatch } from "../features/redux/hooks.js";
-import { reset, undo, redo } from "../features/redux/scriptSlice.js";
+import { reset, undo, redo, disableAnimation } from "../features/redux/scriptSlice.js";
 
 export const MenuButtons = () => {
   const { nextInstructionId, canUndo, canRedo } = useAppSelector(({ script }) => script);
@@ -11,15 +11,21 @@ export const MenuButtons = () => {
   return (<>
     <button
       type="button"
+      onClick={() => {dispatch(disableAnimation()); dispatch(promptFocusRequest())}}
+    >
+      Skip Animation
+    </button>
+    <button
+      type="button"
       disabled = {!canUndo}
-      onClick={() => {dispatch(undo()); dispatch(promptFocusRequest())}}
+      onClick={() => {dispatch(undo()); dispatch(disableAnimation()); dispatch(promptFocusRequest())}}
     >
       Undo
     </button>
     <button
       type="button"
       disabled = {!canRedo}
-      onClick={() => {dispatch(redo()); dispatch(promptFocusRequest())}}
+      onClick={() => {dispatch(redo()); dispatch(disableAnimation()); dispatch(promptFocusRequest())}}
     >
       Redo
     </button>

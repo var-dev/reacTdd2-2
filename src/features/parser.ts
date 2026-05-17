@@ -6,6 +6,7 @@ export const emptyState = {
   pen: { down: true },
   turtle: { x: 0, y: 0, angle: 0 },
   drawCommands: [],
+  animationEnabled: true,
   collectedParameters: {},
   parsedStatements: [],
   parsedTokens: [],
@@ -27,6 +28,7 @@ function tokenizeLine(line: string, lastLineNumber: number): Token[] {
   let lastIndex = 0;
   let match: RegExpExecArray | null;
   let lineNumber = lastLineNumber + 1;
+  // amazonq-ignore-next-line
   while ((match = tokenRegExp.exec(line)) != null) {
     if (match.index > lastIndex) {
       tokens.push({
@@ -76,8 +78,8 @@ export function parseStatement(line: string, state: LogoState) {
       tokenizeLine(line, lastLineNumber(state)),
       state
     );
-  } catch (e:any) {
-    return { ...state, error: { ...e, line } };
+  } catch (e: unknown) {
+    return { ...state, error: { ...(e as LogoStateError), line } };
   }
 }
 

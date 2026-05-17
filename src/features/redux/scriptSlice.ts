@@ -15,10 +15,20 @@ const scriptSlice = createSlice({
         error: undefined,
       }),
     reset: () => initialState,
+    enableAnimation: (state) => ({
+      ...state,
+      animationEnabled: true,
+    }),
+    disableAnimation: (state) => {
+      return {
+        ...state,
+        animationEnabled: false,
+      };
+    },
   },
 });
 
 export const undo = createAction<void>('script/undo')
 export const redo = createAction<void>('script/redo')
-export const { submitScriptName, submitEditLine, reset } = scriptSlice.actions;
+export const { submitScriptName, submitEditLine, reset, enableAnimation, disableAnimation } = scriptSlice.actions;
 export default scriptSlice.reducer;

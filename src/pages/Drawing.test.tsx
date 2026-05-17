@@ -2,7 +2,7 @@ import { describe, it, beforeEach, mock } from "node:test";
 import '../../test/builders/domSetup.js'
 import { render, screen, cleanup, waitFor } from "@testing-library/react";
 import { Provider } from "react-redux";
-import { configureStore, type EnhancedStore } from "@reduxjs/toolkit";
+import { configureStore, type EnhancedStore, type PayloadAction } from "@reduxjs/toolkit";
 import type { ReactNode } from "react";
 import { type Middleware } from "@reduxjs/toolkit";
 import { deepStrictEqual, strictEqual } from "assert";
@@ -13,16 +13,16 @@ import { ok } from "assert/strict";
 window.requestAnimationFrame = () => 0;
 window.cancelAnimationFrame = () => void 0;
 
-//@ts-expect-error
+// @ts-expect-error none
 const mockTurtle = mock.fn(({ x, y, angle }: TurtleState) => <polygon id="Turtle" data-testid="Turtle" x={x} y={y} angle={angle}/>);
-//@ts-expect-error
-const mockStaticLines = mock.fn((...args: any[]) => <line id="StaticLines" data-testid="StaticLines" />);
+// @ts-expect-error none
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const mockStaticLines = mock.fn((...args: unknown[]) => <line id="StaticLines" data-testid="StaticLines" />);
 
 const fakeAnimatedLine = (props: AnimatedLineProps) => {
     void(props)
     return <line data-testid='animatedLine' />
   }
-const realAnimatedLine = (await import ("./AnimatedLine.js")).AnimatedLine
 const mockAnimatedLine = mock.fn((props:AnimatedLineProps)=>fakeAnimatedLine(props))
 mock.module("./AnimatedLine.js", {
   namedExports: {
@@ -43,7 +43,7 @@ mock.module("./StaticLines.js", {
 });
 
 const createTestStoreWithLogger = (initialState: LogoState) => {
-  const actionLog: any[] = [];
+  const actionLog: unknown[] = [];
   const actionLogger: Middleware = () => (next) => (action) => {
     actionLog.push(action);
     return next(action);
@@ -51,7 +51,7 @@ const createTestStoreWithLogger = (initialState: LogoState) => {
 
   const store = configureStore({
     reducer: {
-      script: (state = initialState.script as unknown as LogoState, action: any): LogoState => {
+      script: (state = initialState.script as unknown as LogoState, action: PayloadAction): LogoState => {
         if (action.type === 'script/submitEditLine') {
           return { ...state, nextInstructionId: (state.nextInstructionId ?? 0) + 1 }
         }
@@ -102,14 +102,14 @@ describe("Drawing", () => {
     const {Drawing} = (await import("./Drawing.js"))
     const turtle = { x: 10, y: 20, angle: 30 };
     const {store} = createTestStoreWithLogger({script: { drawCommands: [], turtle }} as unknown as LogoState);
-    renderWithStore(<Drawing />, store).container as unknown as HTMLBodyElement;
+    renderWithStore(<Drawing />, store);
     strictEqual(screen.getByTestId<HTMLDivElement>('Turtle').tagName, 'polygon')
     strictEqual(mockTurtle.mock.calls.length, 1, "Turtle component is called once")
   });
   it("initially places the turtle at 0,0 with angle 0", async ()=>{
     const {Drawing} = (await import("./Drawing.js"))
     const {store} = createTestStoreWithLogger({script: { drawCommands: [] }} as unknown as LogoState);
-    renderWithStore(<Drawing />, store).container as unknown as HTMLBodyElement;
+    renderWithStore(<Drawing />, store);
     const turtle = await waitFor(()=>screen.getByTestId<HTMLDivElement>('Turtle'))
     // deepStrictEqual(mockTurtle.mock.calls[0].arguments[0], { x: 0, y: 0, angle: 30 }, "passes the turtle x, y and angle as props to Turtle")
     strictEqual(turtle.getAttribute('x'), '0', 'expect attr x=0')
@@ -121,7 +121,7 @@ describe("Drawing", () => {
     const { Drawing } = (await import("./Drawing.js"))
     const unknown = { drawCommand: "unknown" }
     const { store } = createTestStoreWithLogger({ script: { drawCommands: [horizontalLine, verticalLine, unknown] } } as unknown as LogoState);
-    renderWithStore(<Drawing />, store).container as unknown as HTMLBodyElement;
+    renderWithStore(<Drawing />, store);
     strictEqual(screen.getByTestId<HTMLDivElement>('StaticLines').tagName, 'line')
     await waitFor(()=>{strictEqual(mockStaticLines.mock.calls.length, 1, "StaticLines component is called once")})
   });
@@ -136,15 +136,15 @@ describe("Drawing", () => {
       const { Drawing } = (await import("./Drawing.js"))
       const { store } = createTestStoreWithLogger(horizontalLineDrawn as unknown as LogoState);
       const RAF = mock.method(window, "requestAnimationFrame");
-      renderWithStore(<Drawing />, store).container as unknown as HTMLBodyElement;
-      strictEqual(RAF.mock.callCount(), 1);
+      renderWithStore(<Drawing />, store);
+      await waitFor(()=>strictEqual(RAF.mock.callCount(), 1))
     });
 
     it("renders AnimatedLine with turtle at the start position when the animation has run for 0s", async () => {
       const { Drawing } = (await import("./Drawing.js"))
       const { store } = createTestStoreWithLogger(horizontalLineDrawn as unknown as LogoState);
       const RAF = mock.method(window, "requestAnimationFrame");
-      renderWithStore(<Drawing />, store).container as unknown as HTMLBodyElement;
+      renderWithStore(<Drawing />, store);
       strictEqual(RAF.mock.callCount(), 1, 'RAF called once');
       const rafCallBack = RAF.mock.calls[0].arguments[0]
       deepStrictEqual(rafCallBack.name, 'handleDrawLineFrame', 'expect handleDrawLineFrame callback')
@@ -160,14 +160,14 @@ describe("Drawing", () => {
     it("does not render AnimatedLine when not moving", async () => {
       const { Drawing } = (await import("./Drawing.js"))
       const { store } = createTestStoreWithLogger({script: {drawCommands: []}} as unknown as LogoState);
-      renderWithStore(<Drawing />, store).container as unknown as HTMLBodyElement;
+      renderWithStore(<Drawing />, store);
       ok(!screen.queryByTestId('animatedLine'))
     });
     it("renders an AnimatedLine with turtle at a position based on a speed of 5px per ms", async () => {
       const { Drawing } = (await import("./Drawing.js"))
       const { store } = createTestStoreWithLogger(horizontalLineDrawn as unknown as LogoState);
       const RAF = mock.method(window, "requestAnimationFrame");
-      renderWithStore(<Drawing />, store).container as unknown as HTMLBodyElement;
+      renderWithStore(<Drawing />, store);
       strictEqual(RAF.mock.callCount(), 1, 'RAF called once');
       const rafCallBack = RAF.mock.calls[0].arguments[0]
       deepStrictEqual(rafCallBack.name, 'handleDrawLineFrame', 'expect handleDrawLineFrame callback')
@@ -186,7 +186,7 @@ describe("Drawing", () => {
       const { Drawing } = (await import("./Drawing.js"))
       const { store } = createTestStoreWithLogger(horizontalLineDrawn as unknown as LogoState);
       const RAF = mock.method(window, "requestAnimationFrame");
-      renderWithStore(<Drawing />, store).container as unknown as HTMLBodyElement;
+      renderWithStore(<Drawing />, store);
       strictEqual(RAF.mock.callCount(), 1, 'RAF called once');
       const rafCallBack = RAF.mock.calls[0].arguments[0]
       deepStrictEqual(rafCallBack.name, 'handleDrawLineFrame', 'expect handleDrawLineFrame callback')
@@ -204,7 +204,7 @@ describe("Drawing", () => {
       const { Drawing } = (await import("./Drawing.js"))
       const { store } = createTestStoreWithLogger(horizontalLineDrawn as unknown as LogoState);
       const RAF = mock.method(window, "requestAnimationFrame");
-      renderWithStore(<Drawing />, store).container as unknown as HTMLBodyElement;
+      renderWithStore(<Drawing />, store);
       strictEqual(RAF.mock.callCount(), 1, 'RAF called once');
       const rafCallBack = RAF.mock.calls[0].arguments[0]
       deepStrictEqual(rafCallBack.name, 'handleDrawLineFrame', 'expect handleDrawLineFrame callback')
@@ -224,7 +224,7 @@ describe("Drawing", () => {
         const { Drawing } = (await import("./Drawing.js"))
         const { store } = createTestStoreWithLogger({ script: {drawCommands: [horizontalLine, verticalLine], turtle: {x: 0, y: 0, angle: 0}}} as unknown as LogoState);
         const RAF = mock.method(window, "requestAnimationFrame");
-        renderWithStore(<Drawing />, store).container as unknown as HTMLBodyElement;
+        renderWithStore(<Drawing />, store);
         strictEqual(RAF.mock.callCount(), 1, 'RAF called once');
         const rafCallBack = RAF.mock.calls[0].arguments[0]
         deepStrictEqual(rafCallBack.name, 'handleDrawLineFrame', 'expect handleDrawLineFrame callback')
@@ -234,7 +234,7 @@ describe("Drawing", () => {
         deepStrictEqual(mockAnimatedLine.mock.calls[2].arguments[0],
           {
             commandToAnimate: verticalLine,
-            turtle: { x: 100, y: 100, angle: 0 }
+            turtle: { x: 200, y: 100, angle: 0 }
           }
         );
       })
@@ -242,7 +242,7 @@ describe("Drawing", () => {
         const { Drawing } = (await import("./Drawing.js"))
         const { store } = createTestStoreWithLogger({ script: {drawCommands: [horizontalLine, verticalLine], turtle: {x: 0, y: 0, angle: 0}}} as unknown as LogoState);
         const RAF = mock.method(window, "requestAnimationFrame");
-        renderWithStore(<Drawing />, store).container as unknown as HTMLBodyElement;
+        renderWithStore(<Drawing />, store);
         strictEqual(RAF.mock.callCount(), 1, 'RAF called once');
         const rafCallBack = RAF.mock.calls[0].arguments[0]
         deepStrictEqual(rafCallBack.name, 'handleDrawLineFrame', 'expect handleDrawLineFrame callback')
@@ -281,7 +281,7 @@ describe("Drawing", () => {
 
   describe("rotation animation", () => {
     const rotationPerformed = {
-      script: { drawCommands: [rotate90] },
+      script: { drawCommands: [rotate90], turtle: {x: 0, y: 0, angle: 0}, animationEnabled: true },
     };
     it("rotates the turtle", async () => {
       const { Drawing } = (await import("./Drawing.js"))
@@ -338,30 +338,30 @@ describe("Drawing", () => {
       let rafId = 0
       const { Drawing } = (await import("./Drawing.js"))
       const { store } = createTestStoreWithLogger({ script: {drawCommands: [rotate90, horizontalLine], turtle: {x: 0, y: 0, angle: 0}}} as unknown as LogoState);
-      const RAF = mock.method(window, "requestAnimationFrame", (cb: Function)=>rafId++);
-      renderWithStore(<Drawing />, store).container as unknown as HTMLBodyElement;
+      const RAF = mock.method(window, "requestAnimationFrame", () => rafId++);
+      renderWithStore(<Drawing />, store);
       strictEqual(RAF.mock.callCount(), 1, 'RAF called once');
-      let rafCallBack = RAF.mock.calls[0].arguments[0]
+      let rafCallBack = RAF.mock.calls[0].arguments[0]!
       strictEqual(rafCallBack.name, 'handleRotationFrame', 'expect handleRotationFrame callback')
 
       await waitFor(() => rafCallBack(0))
       await waitFor(()=>{strictEqual(RAF.mock.callCount(), 2, 'RAF called again #2');})
-      rafCallBack = RAF.mock.calls[1].arguments[0]
+      rafCallBack = RAF.mock.calls[1].arguments[0]!
       strictEqual(rafCallBack.name, 'handleRotationFrame', 'expect handleRotationFrame callback #2') 
 
       await waitFor(() => rafCallBack(500))
       await waitFor(()=>{strictEqual(RAF.mock.callCount(), 3, 'RAF called again #3');})
-      rafCallBack = RAF.mock.calls[2].arguments[0]
+      rafCallBack = RAF.mock.calls[2].arguments[0]!
       strictEqual(rafCallBack.name, 'handleDrawLineFrame', 'expect handleDrawLineFrame callback #3') 
 
       await waitFor(() => rafCallBack(0))
       await waitFor(()=>{strictEqual(RAF.mock.callCount(), 4, 'RAF called again #4');})
-      rafCallBack = RAF.mock.calls[3].arguments[0]
+      rafCallBack = RAF.mock.calls[3].arguments[0]!
       strictEqual(rafCallBack.name, 'handleDrawLineFrame', 'expect handleDrawLineFrame callback #4') 
 
       await waitFor(() => rafCallBack(250))
       await waitFor(()=>{strictEqual(RAF.mock.callCount(), 5, 'RAF called again #5');})
-      rafCallBack = RAF.mock.calls[4].arguments[0]
+      rafCallBack = RAF.mock.calls[4].arguments[0]!
       strictEqual(rafCallBack.name, 'handleDrawLineFrame', 'expect handleDrawLineFrame callback #5')
       await waitFor(() => { strictEqual(mockTurtle.mock.callCount(), 5, 'Turtle called times') })
       await waitFor(() => { strictEqual(mockAnimatedLine.mock.callCount(), 3, 'AnimatedLine called times')})
@@ -374,4 +374,3 @@ describe("Drawing", () => {
     })
   })
 });
-

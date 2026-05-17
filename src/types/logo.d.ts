@@ -3,9 +3,14 @@ interface TurtleState {
   y: number;
   angle: number;
 }
-
+type LogoStateError = {
+    description:string;
+    line: string;
+    position: {end: number; start: number}
+  }
 interface LogoState {
   drawCommands: DrawCommand[];
+  animationEnabled: boolean;
   nextDrawCommandId: number;
   turtle: TurtleState;
   isComplete?: boolean;
@@ -17,7 +22,7 @@ interface LogoState {
   allFunctions: Command[];
   nextInstructionId: number;
   name: string;
-  error?: {description:string}
+  error?: LogoStateError
   [key: string]: unknown;
 }
 type DrawCommand = DrawCommandLinear | DrawCommandRotate | DrawCommandWait
