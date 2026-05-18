@@ -5,20 +5,53 @@ const environmentSlice = createSlice({
   initialState: {
     promptFocusRequest: false,
     promptHasFocus: false,
+    isSharing: false,
+    url: "",
+    isWatching: false,
+    message: "",
   },
   reducers: {
-    promptFocusRequest: (state, action: PayloadAction<void>) => ({
+    promptFocusRequest: (state,) => ({
       ...state,
       promptFocusRequest: true,
       promptHasFocus: false,
     }),
-    promptHasFocus: (state, action: PayloadAction<void>) => ({
+    promptHasFocus: (state,) => ({
       ...state,
       promptHasFocus: true,
       promptFocusRequest: false,
-      }),
+    }),
+    message: (state, action: PayloadAction<string>) => ({
+      ...state,
+      message: action.payload,
+    }),
+    startedSharing: (state, action: PayloadAction<{ url: string }>) => ({
+      ...state,
+      isSharing: true,
+      url: action.payload.url,
+    }),
+    stoppedSharing: (state,) => ({
+      ...state,
+      isSharing: false,
+    }),
+    startedWatching: (state,) => ({
+      ...state,
+      isWatching: true,
+    }),
+    stoppedWatching: (state,) => ({
+      ...state,
+      isWatching: false,
+    }),
   },
 });
 
-export const { promptFocusRequest, promptHasFocus } = environmentSlice.actions;
+export const { 
+  promptFocusRequest, 
+  promptHasFocus,
+  message,
+  startedSharing,
+  stoppedSharing,
+  startedWatching,
+  stoppedWatching, 
+} = environmentSlice.actions;
 export default environmentSlice.reducer;
