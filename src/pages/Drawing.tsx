@@ -20,7 +20,7 @@ export const Drawing = () => {
   const drawCommandsCountPrev = useRef(0)
   const dispatch = useAppDispatch();
   const { drawCommands, turtle: turtleState = initialTurtle, animationEnabled = true } = useAppSelector(({ script }) => script);
-  const drawCommandsCount = drawCommands.length - 1;
+  const drawCommandsCount = drawCommands.length;
   const [turtle, setTurtle] = useState(turtleState);
   const [animatingCommandIndex, setAnimatingCommandIndex] = useState(0);
   const lineCommands = drawCommands
@@ -30,54 +30,26 @@ export const Drawing = () => {
   const isDrawingLine = commandToAnimate && isDrawLineCommand(commandToAnimate);
   const isRotating = commandToAnimate && isRotateCommand(commandToAnimate);
   useEffect(() => {
-    enableAnimation();
-    if (animatingCommandIndex > drawCommandsCount){
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setAnimatingCommandIndex(drawCommandsCount)
+    doAdjustAnimatingCommandIndexAfterUndo();
+    doCorrectTurtlePositionAfterUndo();
+
+    function doAdjustAnimatingCommandIndexAfterUndo() {
+      if (animatingCommandIndex + 1 > drawCommandsCount && drawCommandsCount > 0) {
+        setAnimatingCommandIndex(drawCommandsCount - 1);
+      }
     }
-    if (drawCommandsCount > drawCommandsCountPrev.current) {
-      drawCommandsCountPrev.current = drawCommandsCount;
-    } else {
-      setTurtle(turtleState)
+    function doCorrectTurtlePositionAfterUndo() {
+      if (drawCommandsCount > drawCommandsCountPrev.current) {
+        drawCommandsCountPrev.current = drawCommandsCount;
+      } else {
+        setTurtle(turtleState);
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ drawCommandsCount, turtleState])
   useEffect(() => {
-      let duration = 0;
-      let start: number | null = null;
-
-    const handleDrawLineFrame = (time: number) => {
-      const { x1, x2, y1, y2 } = commandToAnimate  as DrawCommandLinear;
-      if (start === null) start = time;
-      const elapsed = animationEnabled ? time - start : duration;
-      if (elapsed < duration) {
-        setTurtle(turtle => ({
-          ...turtle,
-          x: x1 + ((x2 - x1) * (elapsed / duration)),
-          y: y1 + ((y2 - y1) * (elapsed / duration)),
-        }))
-        animationFrameId.current = window.requestAnimationFrame(handleDrawLineFrame)
-      } else {
-        setTurtle((turtle) => ({ ...turtle, x: x2, y: y2 }));
-        setAnimatingCommandIndex((i: number) => i + 1)
-      }
-    };
-
-    const handleRotationFrame = (time: number) => {
-      const {previousAngle, newAngle} = commandToAnimate as DrawCommandRotate;
-      if (start === null) start = time;
-      const elapsed = animationEnabled ? time - start : duration;
-      if (elapsed < duration) {
-        setTurtle(turtle => ({
-          ...turtle,
-          angle: previousAngle + (newAngle - previousAngle) * elapsed / duration
-        }))
-        animationFrameId.current = window.requestAnimationFrame(handleRotationFrame)
-      } else {
-        setTurtle(turtle => ({...turtle,  angle: newAngle}));
-        setAnimatingCommandIndex((i: number) => i + 1)
-      }
-    };
+    let duration = 0;
+    let start: number | null = null;
     if (isDrawingLine) {
       duration = movementSpeed * distance(commandToAnimate as DrawCommandLinear);
       animationFrameId.current = window.requestAnimationFrame(handleDrawLineFrame)
@@ -91,7 +63,39 @@ export const Drawing = () => {
       if (animationFrameId.current !== null) {
         window.cancelAnimationFrame(animationFrameId.current!);
         animationFrameId.current = null
-        if (animatingCommandIndex === drawCommandsCount && animationEnabled === false) dispatch(enableAnimation())
+        if (animatingCommandIndex + 1 === drawCommandsCount && animationEnabled === false) dispatch(enableAnimation())
+      }
+    }
+
+    function handleDrawLineFrame(time: number) {
+      const { x1, x2, y1, y2 } = commandToAnimate as DrawCommandLinear;
+      if (start === null) start = time;
+      const elapsed = animationEnabled ? time - start : duration;
+      if (elapsed < duration) {
+        setTurtle(turtle => ({
+          ...turtle,
+          x: x1 + ((x2 - x1) * (elapsed / duration)),
+          y: y1 + ((y2 - y1) * (elapsed / duration)),
+        }));
+        animationFrameId.current = window.requestAnimationFrame(handleDrawLineFrame);
+      } else {
+        setTurtle((turtle) => ({ ...turtle, x: x2, y: y2 }));
+        setAnimatingCommandIndex((i: number) => i + 1);
+      }
+    }
+    function handleRotationFrame(time: number) {
+      const { previousAngle, newAngle } = commandToAnimate as DrawCommandRotate;
+      if (start === null) start = time;
+      const elapsed = animationEnabled ? time - start : duration;
+      if (elapsed < duration) {
+        setTurtle(turtle => ({
+          ...turtle,
+          angle: previousAngle + (newAngle - previousAngle) * elapsed / duration
+        }));
+        animationFrameId.current = window.requestAnimationFrame(handleRotationFrame);
+      } else {
+        setTurtle(turtle => ({ ...turtle, angle: newAngle }));
+        setAnimatingCommandIndex((i: number) => i + 1);
       }
     }
   }, [commandToAnimate, isDrawingLine, isRotating, animatingCommandIndex, dispatch, drawCommandsCount, animationEnabled])
