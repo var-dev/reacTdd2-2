@@ -1,4 +1,4 @@
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, createAction, type PayloadAction } from "@reduxjs/toolkit";
 
 const environmentSlice = createSlice({
   name: "environment",
@@ -44,6 +44,8 @@ const environmentSlice = createSlice({
     }),
   },
 });
+
+export const requestStartSharing = createAction<void>('environment/RequestStartSharing')
 
 export const { 
   promptFocusRequest, 
