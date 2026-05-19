@@ -1,11 +1,14 @@
 import { takeLatest, call, put } from "redux-saga/effects";
 import { 
   requestStartSharing,
+  requestStopSharing,
   startedSharing,
   stoppedSharing, 
   startedWatching,
   stoppedWatching,
 } from "../environmentSlice.js";
+
+let presenterSocket:WebSocket;
 
 const openWebSocket = () => {
   const { host } = window.location;
@@ -32,7 +35,7 @@ function* startWatching() {
 function* stopWatching() {
 }
 function* startSharing(): Generator {
-  const presenterSocket = yield call(openWebSocket)
+  presenterSocket = yield call(openWebSocket)
   presenterSocket.send(JSON.stringify(requestStartSharing()));
   const message = yield call(receiveMessage, presenterSocket)
   const presenterSessionId = JSON.parse(message).id;
@@ -41,10 +44,14 @@ function* startSharing(): Generator {
 }
 
 function* stopSharing() {
+  if (Object.hasOwn(presenterSocket, 'close')) {
+    presenterSocket.close();
+    yield put(stoppedSharing());
+  }
 }
 export function* sharingSaga() {
   yield takeLatest(startedWatching().type, startWatching);
   yield takeLatest(stoppedWatching().type, stopWatching);
   yield takeLatest(requestStartSharing().type, startSharing);
-  yield takeLatest(stoppedSharing().type, stopSharing);
+  yield takeLatest(requestStopSharing().type, stopSharing);
 }
