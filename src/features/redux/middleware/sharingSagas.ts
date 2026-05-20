@@ -6,9 +6,12 @@ import {
   shareNewAction,
   startedSharing,
   stoppedSharing, 
-  startedWatching,
-  stoppedWatching,
+  tryStartWatching,
+  // startedWatching,
+  tryStopWatching,
+  // stoppedWatching,
 } from "../environmentSlice.js";
+import { reset } from "../scriptSlice.js";
 
 let presenterSocket:WebSocket;
 
@@ -43,6 +46,13 @@ function* shareNewActionHandler(
   } 
 }
 function* startWatching() {
+  const sessionId = new URLSearchParams(
+    window.location.search.substring(1),
+  ).get("watching");
+  if (sessionId) {
+    yield call(openWebSocket);
+    yield put(reset());
+  }
 }
 function* stopWatching() {
 }
@@ -62,8 +72,8 @@ function* stopSharing() {
   }
 }
 export function* sharingSaga() {
-  yield takeLatest(startedWatching.type, startWatching);
-  yield takeLatest(stoppedWatching.type, stopWatching);
+  yield takeLatest(tryStartWatching.type, startWatching);
+  yield takeLatest(tryStopWatching.type, stopWatching);
   yield takeLatest(requestStartSharing.type, startSharing);
   yield takeLatest(requestStopSharing.type, stopSharing);
   yield takeLatest(shareNewAction.type, shareNewActionHandler);

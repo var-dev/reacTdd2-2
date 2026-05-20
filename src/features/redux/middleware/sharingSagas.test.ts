@@ -2,12 +2,13 @@ import { it, describe, mock, beforeEach } from "node:test";
 import { dom } from '../../../../test/builders/domSetup.js'
 import { waitFor } from "@testing-library/react";
 import type { store as StoreType } from "../store.js";
-import {requestStartSharing, requestStopSharing, shareNewAction } from "../environmentSlice.js";
+import {requestStartSharing, requestStopSharing, shareNewAction, tryStartWatching } from "../environmentSlice.js";
+import { submitEditLine } from "../scriptSlice.js";
 import {  deepStrictEqual, strictEqual } from "assert";
 
-dom.reconfigure({ url: "http://test:1234/index.html" });
 
 describe("sharingSaga", () => {
+  dom.reconfigure({ url: "http://test:1234/index.html" });
   let store: typeof StoreType;
   let socketSpyFactory: ReturnType<typeof mock.method>;
   let sendSpy: ReturnType<typeof mock.fn>;
@@ -124,6 +125,42 @@ describe("sharingSaga", () => {
       await waitFor(() => {
         strictEqual(sendSpy.mock.callCount(), 1, 'no new calls after readyState: WebSocket.CLOSED');
       })
+    });
+  });
+  describe("watching", () => {
+    beforeEach(() => {
+      dom.reconfigure({ url: "http://test:1234/index.html?watching=234" });
+    });
+    it("opens a socket when the page loads", async () => {
+      store.dispatch(tryStartWatching());
+      await waitFor(() => {
+        strictEqual(socketSpyFactory.mock.callCount(), 1)
+        strictEqual(socketSpyFactory.mock.calls[0].arguments[0], "ws://test:1234/share");
+      })
+    });
+    it("does not open socket if the watching field is not set", async () => {
+      dom.reconfigure({ url: "http://test:1234/index.html?" });
+      store.dispatch(tryStartWatching());
+      await waitFor(() => {
+        strictEqual(socketSpyFactory.mock.callCount(), 0)
+      })
+    });
+    const startWatching = async () => {
+      store.dispatch(tryStartWatching());
+      await waitFor(() => socketSpy.onopen());
+    };
+    it("dispatches a RESET action", async () => {
+      store.dispatch(submitEditLine("fd 10"));
+      await waitFor(() => {
+        strictEqual(store.getState().script.turtle.x, 10);
+      });
+      await startWatching();
+
+      await waitFor(() => {
+        strictEqual(store.getState().script.turtle.x, 0);
+        strictEqual(store.getState().script.turtle.y, 0);
+        strictEqual(store.getState().script.turtle.angle, 0);
+      });
     });
   });
 });
