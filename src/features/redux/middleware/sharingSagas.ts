@@ -1,7 +1,9 @@
+import type { PayloadAction } from "@reduxjs/toolkit";
 import { takeLatest, call, put } from "redux-saga/effects";
 import { 
   requestStartSharing,
   requestStopSharing,
+  shareNewAction,
   startedSharing,
   stoppedSharing, 
   startedWatching,
@@ -30,6 +32,16 @@ const buildUrl = (id: number) => {
   const { protocol, host, pathname } = window.location;
   return `${protocol}//${host}${pathname}?watching=${id}`;
 };
+function* shareNewActionHandler(
+  action: PayloadAction<Record<string, unknown>>,
+) {
+  if (presenterSocket && presenterSocket.readyState === WebSocket.OPEN){
+    yield call(
+      [presenterSocket, presenterSocket.send],
+      JSON.stringify(shareNewAction(action.payload)),
+    );
+  } 
+}
 function* startWatching() {
 }
 function* stopWatching() {
@@ -50,8 +62,9 @@ function* stopSharing() {
   }
 }
 export function* sharingSaga() {
-  yield takeLatest(startedWatching().type, startWatching);
-  yield takeLatest(stoppedWatching().type, stopWatching);
-  yield takeLatest(requestStartSharing().type, startSharing);
-  yield takeLatest(requestStopSharing().type, stopSharing);
+  yield takeLatest(startedWatching.type, startWatching);
+  yield takeLatest(stoppedWatching.type, stopWatching);
+  yield takeLatest(requestStartSharing.type, startSharing);
+  yield takeLatest(requestStopSharing.type, stopSharing);
+  yield takeLatest(shareNewAction.type, shareNewActionHandler);
 }

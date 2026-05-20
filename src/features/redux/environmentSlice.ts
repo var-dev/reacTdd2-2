@@ -47,6 +47,7 @@ const environmentSlice = createSlice({
 
 export const requestStartSharing = createAction<void>('environment/RequestStartSharing')
 export const requestStopSharing = createAction<void>('environment/RequestStopSharing')
+export const shareNewAction = createAction<Record<string,unknown>>('environment/ShareNewAction')
 
 export const { 
   promptFocusRequest, 

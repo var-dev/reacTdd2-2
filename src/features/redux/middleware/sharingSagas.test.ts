@@ -2,8 +2,8 @@ import { it, describe, mock, beforeEach } from "node:test";
 import { dom } from '../../../../test/builders/domSetup.js'
 import { waitFor } from "@testing-library/react";
 import type { store as StoreType } from "../store.js";
-import {requestStartSharing, requestStopSharing } from "../environmentSlice.js";
-import { strictEqual } from "assert";
+import {requestStartSharing, requestStopSharing, shareNewAction } from "../environmentSlice.js";
+import {  deepStrictEqual, strictEqual } from "assert";
 
 dom.reconfigure({ url: "http://test:1234/index.html" });
 
@@ -14,6 +14,7 @@ describe("sharingSaga", () => {
   type SocketSpy= {
     send: typeof sendSpy, 
     close: typeof closeSpy, 
+    readyState: number,
     onopen: () => void, 
     onmessage: (arg: {data:string})=>void
   };
@@ -27,6 +28,7 @@ describe("sharingSaga", () => {
       socketSpy = {
         send: sendSpy,
         close: closeSpy,
+        readyState: WebSocket.OPEN
       } as typeof socketSpy;
       return socketSpy
     });
@@ -79,6 +81,49 @@ describe("sharingSaga", () => {
       await waitFor(() => {
         strictEqual(store.getState().environment.isSharing, false);
       });
+    });
+  });
+  describe("SHARE_NEW_ACTION", () => {
+    const startSharing = async (id: number) => {
+      store.dispatch(requestStartSharing());
+      await waitFor(() => socketSpy.onopen());
+      await waitFor(() =>
+        socketSpy.onmessage({ data: JSON.stringify({ type: "UNKNOWN", id }) }),
+      );
+    };
+    it("forwards the same action on to the socket", async () => {
+      const innerAction = { a: 123 };
+      await startSharing(987);
+      store.dispatch(shareNewAction(innerAction));
+      await waitFor(() => {
+        strictEqual(sendSpy.mock.callCount(), 2);
+        strictEqual(
+          sendSpy.mock.calls[1].arguments[0],
+          JSON.stringify(shareNewAction(innerAction)),
+        );
+      });
+    });
+    it("does not forward if the socket is not set yet", async () => {
+      store.dispatch(shareNewAction({s:1}));
+      await waitFor(() => {
+        strictEqual(sendSpy.mock.callCount(), 0);
+      });
+    });
+    it("does not forward if the socket has been closed", async () => {
+      const innerAction = { a: 123 };
+      await startSharing(987);
+      await waitFor(() => {
+        strictEqual(sendSpy.mock.callCount(), 1, 'sendSpy first call');
+        socketSpy.readyState = WebSocket.CLOSED;
+      })
+      store.dispatch(shareNewAction(innerAction));
+      await waitFor(()=>{
+        strictEqual(socketSpyFactory.mock.callCount(), 1, `socketSpyFactory callCount`)
+        deepStrictEqual((socketSpyFactory.mock.calls[0].result as WebSocket).readyState, WebSocket.CLOSED, `socketSpy.readyState`)
+      })
+      await waitFor(() => {
+        strictEqual(sendSpy.mock.callCount(), 1, 'no new calls after readyState: WebSocket.CLOSED');
+      })
     });
   });
 });
