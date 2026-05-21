@@ -5,6 +5,7 @@ import type { store as StoreType } from "../store.js";
 import {requestStartSharing, requestStopSharing, shareNewAction, tryStartWatching } from "../environmentSlice.js";
 import { submitEditLine } from "../scriptSlice.js";
 import {  deepStrictEqual, strictEqual } from "assert";
+import { END } from "redux-saga";
 
 
 describe("sharingSaga", () => {
@@ -17,6 +18,7 @@ describe("sharingSaga", () => {
     close: typeof closeSpy, 
     readyState: number,
     onopen: () => void, 
+    onclose: () => void, 
     onmessage: (arg: {data:string})=>void
   };
   let socketSpy: SocketSpy;
@@ -145,7 +147,7 @@ describe("sharingSaga", () => {
         strictEqual(socketSpyFactory.mock.callCount(), 0)
       })
     });
-    const startWatching = async () => {
+    const startWatchingHelper = async () => {
       store.dispatch(tryStartWatching());
       await waitFor(() => socketSpy.onopen());
     };
@@ -154,13 +156,69 @@ describe("sharingSaga", () => {
       await waitFor(() => {
         strictEqual(store.getState().script.turtle.x, 10);
       });
-      await startWatching();
+      await startWatchingHelper();
 
       await waitFor(() => {
         strictEqual(store.getState().script.turtle.x, 0);
         strictEqual(store.getState().script.turtle.y, 0);
         strictEqual(store.getState().script.turtle.angle, 0);
       });
+    });
+    it("sends the session id to the socket with an action type of START_WATCHING", async () => {
+      await startWatchingHelper();
+      await waitFor(() => {
+        strictEqual(sendSpy.mock.callCount(), 1);
+        strictEqual(sendSpy.mock.calls[0].arguments[0],
+          JSON.stringify({
+            type: tryStartWatching.type,
+            id: "234",
+          }),
+        );
+      })
+    });
+    it("dispatches a STARTED_WATCHING action", async () => {
+      await startWatchingHelper();
+      await waitFor(() => {
+        strictEqual(store.getState().environment.isWatching, true);
+      })
+    });
+    it("relays multiple actions from the websocket", async () => {
+      const message1 = submitEditLine("fd 10");
+      const message2 = submitEditLine("rt 90");
+      const message3 = submitEditLine("fd 10");
+      const sendSocketMessage = async (message: object) => {
+        await waitFor(() => strictEqual(typeof socketSpy.onmessage, "function"));
+        socketSpy.onmessage({ data: JSON.stringify(message) });
+      };
+
+      await startWatchingHelper();
+
+      await sendSocketMessage(message1);
+      await waitFor(() => {
+        strictEqual(store.getState().script.turtle.x, 10);
+        strictEqual(store.getState().script.turtle.y, 0);
+        strictEqual(store.getState().script.turtle.angle, 0);
+      });
+
+      await sendSocketMessage(message2);
+      await waitFor(() => {
+        strictEqual(store.getState().script.turtle.x, 10);
+        strictEqual(store.getState().script.turtle.y, 0);
+        strictEqual(store.getState().script.turtle.angle, 90);
+      });
+
+      await sendSocketMessage(message3);
+      await waitFor(() => {
+        strictEqual(store.getState().script.turtle.x, 10);
+        strictEqual(store.getState().script.turtle.y, 10);
+        strictEqual(store.getState().script.turtle.angle, 90);
+      });
+
+      await sendSocketMessage(END);
+      socketSpy.onclose();
+      await waitFor(() => {
+        strictEqual(store.getState().environment.isWatching, false, 'watching stopped');
+      })
     });
   });
 });

@@ -1,5 +1,6 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
-import { takeLatest, call, put } from "redux-saga/effects";
+import { takeLatest, call, put, take } from "redux-saga/effects";
+import { eventChannel, END } from "redux-saga";
 import { 
   requestStartSharing,
   requestStopSharing,
@@ -7,9 +8,9 @@ import {
   startedSharing,
   stoppedSharing, 
   tryStartWatching,
-  // startedWatching,
+  startedWatching,
   tryStopWatching,
-  // stoppedWatching,
+  stoppedWatching,
 } from "../environmentSlice.js";
 import { reset } from "../scriptSlice.js";
 
@@ -45,13 +46,41 @@ function* shareNewActionHandler(
     );
   } 
 }
-function* startWatching() {
+const webSocketListener = (socket: WebSocket) =>
+  eventChannel((emitter) => {
+    socket.onmessage = emitter;
+    socket.onclose = () => emitter(END);
+    return () => {
+      socket.close();
+    };
+  });
+function* watchUntilStopRequest(chan: ReturnType<typeof webSocketListener>): Generator {
+  try {
+    while (true) {
+      const ev = yield take(chan);
+      yield put(JSON.parse(ev.data));
+    }
+  } finally {
+    chan.close();
+    yield put(stoppedWatching())
+  }
+};
+function* startWatching(): Generator {
   const sessionId = new URLSearchParams(
     window.location.search.substring(1),
   ).get("watching");
   if (sessionId) {
-    yield call(openWebSocket);
+    const watcherSocket = (yield call(openWebSocket))as WebSocket;
     yield put(reset());
+    watcherSocket.send(
+      JSON.stringify({
+        type: tryStartWatching.type,
+        id: sessionId,
+      }),
+    );
+    yield put(startedWatching())
+    const channel = yield call(webSocketListener, watcherSocket);
+    yield call(watchUntilStopRequest, channel);
   }
 }
 function* stopWatching() {
