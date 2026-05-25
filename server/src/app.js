@@ -53,10 +53,11 @@ app.ws("/share", function (ws) {
   ws.on("message", function (msg) {
     let session;
     const request = JSON.parse(msg);
+    console.log('request: ', request)
     switch (request.type) {
-      case "START_SHARING":
+      case "environment/requestStartSharing":
         sendJson(ws, {
-          status: "STARTED",
+          status: "environment/startedSharing",
           id: nextSessionId,
         });
         sessions[nextSessionId] = {
@@ -66,7 +67,7 @@ app.ws("/share", function (ws) {
         };
         nextSessionId++;
         break;
-      case "START_WATCHING":
+      case "environment/tryStartWatching":
         session = sessions[request.id];
         if (session) {
           session.subscribers = [
@@ -78,15 +79,15 @@ app.ws("/share", function (ws) {
           );
         }
         break;
-      case "NEW_ACTION":
+      case "environment/shareNewAction":
         session = sessions[findSessionId(ws)];
         sendToSubscribers(
           session,
-          request.innerAction
+          request.payload
         );
         session.history = [
           ...session.history,
-          request.innerAction,
+          request.payload,
         ];
     }
   });

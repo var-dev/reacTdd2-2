@@ -1,5 +1,6 @@
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { takeLatest, call, put, take } from "redux-saga/effects";
+import type { EventChannel } from "redux-saga";
 import { eventChannel, END } from "redux-saga";
 import { 
   requestStartSharing,
@@ -46,7 +47,7 @@ function* shareNewActionHandler(
     );
   } 
 }
-const webSocketListener = (socket: WebSocket) =>
+const webSocketListener = (socket: WebSocket): EventChannel<{data: string}> =>
   eventChannel((emitter) => {
     socket.onmessage = emitter;
     socket.onclose = () => emitter(END);
@@ -79,7 +80,7 @@ function* startWatching(): Generator {
       }),
     );
     yield put(startedWatching())
-    const channel = yield call(webSocketListener, watcherSocket);
+    const channel = (yield call(webSocketListener, watcherSocket)) as EventChannel<{data: string}>;
     yield call(watchUntilStopRequest, channel);
   }
 }
