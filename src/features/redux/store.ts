@@ -5,7 +5,7 @@ import { withUndoRedo } from "./withUndoRedo.js";
 import { save, load} from './middleware/localStorage.js';
 import environmentReducer from './environmentSlice.js';
 import createSagaMiddleware from 'redux-saga'
-import { sharingSaga } from "./middleware/sharingSagas.js";
+import { sharingSaga, duplicateForSharing } from "./middleware/sharingSagas.js";
 
 const sagaMiddleware = createSagaMiddleware()
 export const store = configureStore({
@@ -19,10 +19,11 @@ export const store = configureStore({
       serializableCheck: {
         ignoredPaths: ['script.allFunctions', 'script.parsedStatements'],
       },
-    }).concat(save, sagaMiddleware),
+    }).concat(save, duplicateForSharing, sagaMiddleware),
 });
 sagaMiddleware.run(sharingSaga)
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 export type ScriptReducer = typeof scriptReducer
+export type Store  = typeof store

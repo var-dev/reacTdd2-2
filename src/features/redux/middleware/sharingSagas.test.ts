@@ -1,11 +1,16 @@
 import { it, describe, mock, beforeEach } from "node:test";
 import { dom } from '../../../../test/builders/domSetup.js'
 import { waitFor } from "@testing-library/react";
-import type { store as StoreType } from "../store.js";
+import type { Store, store as StoreType } from "../store.js";
 import {requestStartSharing, requestStopSharing, shareNewAction, tryStartWatching } from "../environmentSlice.js";
 import { submitEditLine } from "../scriptSlice.js";
 import {  deepStrictEqual, strictEqual } from "assert";
 import { END } from "redux-saga";
+import createSagaMiddleware from 'redux-saga'
+import { configureStore, type Middleware, type UnknownAction } from "@reduxjs/toolkit";
+import scriptReducer from '../scriptSlice.js'
+import environmentReducer from '../environmentSlice.js'
+import { initialState } from "../../parser.js";
 
 
 describe("sharingSaga", () => {
@@ -221,4 +226,61 @@ describe("sharingSaga", () => {
       })
     });
   });
+  describe('duplicateForSharing', async ()=>{
+    let store: Store;
+    let actions: UnknownAction[];
+
+    const {sharingSaga, duplicateForSharing} = (await import("./sharingSagas.ts"));
+    beforeEach(async () => {
+      actions = [];
+      const recordAction: Middleware = (store)=>(next)=>(action)=>{actions.push(action as UnknownAction);void(store);return next(action);  };
+      const sagaMiddleware = createSagaMiddleware();
+      store = configureStore({
+        reducer: {
+          script: scriptReducer,
+          environment: environmentReducer,
+        },
+        preloadedState: { script: initialState } as {
+          script: LogoState;
+        },
+        middleware: (getDefaultMiddleware) =>
+          getDefaultMiddleware({
+            serializableCheck: {
+              ignoredPaths: ["script.allFunctions", "script.parsedStatements"],
+            },
+          }).concat(recordAction, sagaMiddleware, duplicateForSharing),
+      }) as Store;
+      sagaMiddleware.run(sharingSaga);
+    });
+    it('duplicate actions', async () => {
+      store.dispatch(submitEditLine("fd 10"));
+      await waitFor(() => strictEqual(actions.length, 2));
+      strictEqual(actions[0].type, submitEditLine.type, 'expect submitEditLine');
+      strictEqual(actions[1].type, shareNewAction.type, 'expect shareNewAction');
+    })
+    it('calls ws.send stub with new action', async ()=>{
+      store.dispatch(requestStartSharing())
+      await waitFor(() => {strictEqual(socketSpyFactory.mock.callCount(), 1, `socketSpyFactory callCount on requestStartSharing`)});
+      await waitFor(() => socketSpy.onopen());
+      await waitFor(() => socketSpy.onmessage({data: JSON.stringify({ type: "UNKNOWN", id: 123 })}));
+      await waitFor(() => strictEqual(store.getState().environment.isSharing, true, `isSharing`));
+      store.dispatch(submitEditLine("fd 10"));
+      await waitFor(() => {
+        strictEqual(sendSpy.mock.callCount(), 2, `sendSpy callCount`)
+        strictEqual(sendSpy.mock.calls[1].arguments[0], JSON.stringify(shareNewAction(submitEditLine("fd 10"))), `sendSpy call[1] arguments[0]`)
+      });
+    })
+    it('receives and processes new shared action', async ()=>{
+      store.dispatch(tryStartWatching())
+      await waitFor(() => {strictEqual(socketSpyFactory.mock.callCount(), 1, `socketSpyFactory callCount on tryStartWatching`)});
+      await waitFor(() => socketSpy.onopen());
+      await waitFor(() => strictEqual(store.getState().environment.isWatching, true, `isWatching`));
+      await waitFor(() => {socketSpy.onmessage({data: JSON.stringify(submitEditLine("fd 10"))})})
+      await waitFor(() => {
+        strictEqual(store.getState().script.turtle.x, 10);
+        strictEqual(store.getState().script.turtle.y, 0);
+        strictEqual(store.getState().script.turtle.angle, 0);
+      });
+    })
+  })
 });

@@ -1,21 +1,21 @@
-import type { PayloadAction } from "@reduxjs/toolkit";
+import type { Middleware, PayloadAction, } from "@reduxjs/toolkit";
 import { takeLatest, call, put, take } from "redux-saga/effects";
 import type { EventChannel } from "redux-saga";
 import { eventChannel, END } from "redux-saga";
-import { 
+import {
   requestStartSharing,
   requestStopSharing,
   shareNewAction,
   startedSharing,
-  stoppedSharing, 
+  stoppedSharing,
   tryStartWatching,
   startedWatching,
   tryStopWatching,
   stoppedWatching,
 } from "../environmentSlice.js";
-import { reset } from "../scriptSlice.js";
+import { reset, submitEditLine } from "../scriptSlice.js";
 
-let presenterSocket:WebSocket;
+let presenterSocket: WebSocket;
 
 const openWebSocket = () => {
   const { host } = window.location;
@@ -40,14 +40,14 @@ const buildUrl = (id: number) => {
 function* shareNewActionHandler(
   action: PayloadAction<Record<string, unknown>>,
 ) {
-  if (presenterSocket && presenterSocket.readyState === WebSocket.OPEN){
+  if (presenterSocket && presenterSocket.readyState === WebSocket.OPEN) {
     yield call(
       [presenterSocket, presenterSocket.send],
       JSON.stringify(shareNewAction(action.payload)),
     );
-  } 
+  }
 }
-const webSocketListener = (socket: WebSocket): EventChannel<{data: string}> =>
+const webSocketListener = (socket: WebSocket): EventChannel<{ data: string }> =>
   eventChannel((emitter) => {
     socket.onmessage = emitter;
     socket.onclose = () => emitter(END);
@@ -55,7 +55,9 @@ const webSocketListener = (socket: WebSocket): EventChannel<{data: string}> =>
       socket.close();
     };
   });
-function* watchUntilStopRequest(chan: ReturnType<typeof webSocketListener>): Generator {
+function* watchUntilStopRequest(
+  chan: ReturnType<typeof webSocketListener>,
+): Generator {
   try {
     while (true) {
       const ev = yield take(chan);
@@ -63,15 +65,15 @@ function* watchUntilStopRequest(chan: ReturnType<typeof webSocketListener>): Gen
     }
   } finally {
     chan.close();
-    yield put(stoppedWatching())
+    yield put(stoppedWatching());
   }
-};
+}
 function* startWatching(): Generator {
   const sessionId = new URLSearchParams(
     window.location.search.substring(1),
   ).get("watching");
   if (sessionId) {
-    const watcherSocket = (yield call(openWebSocket))as WebSocket;
+    const watcherSocket = (yield call(openWebSocket)) as WebSocket;
     yield put(reset());
     watcherSocket.send(
       JSON.stringify({
@@ -79,24 +81,26 @@ function* startWatching(): Generator {
         id: sessionId,
       }),
     );
-    yield put(startedWatching())
-    const channel = (yield call(webSocketListener, watcherSocket)) as EventChannel<{data: string}>;
+    yield put(startedWatching());
+    const channel = (yield call(
+      webSocketListener,
+      watcherSocket,
+    )) as EventChannel<{ data: string }>;
     yield call(watchUntilStopRequest, channel);
   }
 }
-function* stopWatching() {
-}
+function* stopWatching() {}
 function* startSharing(): Generator {
-  presenterSocket = yield call(openWebSocket)
+  presenterSocket = yield call(openWebSocket);
   presenterSocket.send(JSON.stringify(requestStartSharing()));
-  const message = yield call(receiveMessage, presenterSocket)
+  const message = yield call(receiveMessage, presenterSocket);
   const presenterSessionId = JSON.parse(message).id;
   const url = buildUrl(presenterSessionId);
   yield put(startedSharing({ url }));
 }
 
 function* stopSharing() {
-  if (Object.hasOwn(presenterSocket, 'close')) {
+  if (Object.hasOwn(presenterSocket, "close")) {
     presenterSocket.close();
     yield put(stoppedSharing());
   }
@@ -108,3 +112,16 @@ export function* sharingSaga() {
   yield takeLatest(requestStopSharing.type, stopSharing);
   yield takeLatest(shareNewAction.type, shareNewActionHandler);
 }
+
+export const duplicateForSharing: Middleware = (store) => (next) => (action) => {
+  if (submitEditLine.match(action)) {
+    store.dispatch(
+      //   {
+      //   type: "SHARE_NEW_ACTION",
+      //   innerAction: action,
+      // }
+      shareNewAction(action)
+    );
+  }
+  return next(action);
+};
