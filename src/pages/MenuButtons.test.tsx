@@ -7,7 +7,7 @@ import { configureStore, type EnhancedStore, type UnknownAction } from "@reduxjs
 import type { ReactNode } from "react";
 import { type Middleware } from "@reduxjs/toolkit";
 import { submitEditLine, reset } from "../features/redux/scriptSlice.js";
-import { requestStartSharing, startedSharing, stoppedSharing } from "../features/redux/environmentSlice.js";
+import { requestStartSharing, startedSharing, startedWatching, stoppedSharing } from "../features/redux/environmentSlice.js";
 import { strictEqual } from "assert";
 import { MenuButtons } from "./MenuButtons.js";
 
@@ -234,26 +234,23 @@ describe("MenuButtons", () => {
     });
 
     describe("messages", () => {
-      // it("renders a message containing the url if sharing has started", () => {
-      //   const {store} = await import('../features/redux/store.js')
-      //   renderWithStore(<MenuButtons />, store);
-      //   dispatchToStore({
-      //     type: "STARTED_SHARING",
-      //     url: "http://123",
-      //   });
-      //   expect(container.innerHTML).toContain(
-      //     'You are now presenting your script. <a href="http://123">Here\'s the URL for sharing.</a></p>'
-      //   );
-      // });
+      it("renders a message containing the url if sharing has started", async () => {
+        const {store} = await import('../features/redux/store.js')
+        renderWithStore(<MenuButtons />, store);
+        await waitFor(()=>{store.dispatch(startedSharing({url: 'http://123', }))})
+        await waitFor(() => {
+          strictEqual(screen.getByText("Here's the URL for sharing.").tagName, "A");
+        })
+      });
 
-      // it("renders a message when watching has started", () => {
-      //   const {store} = await import('../features/redux/store.js')
-      //   renderWithStore(<MenuButtons />, store);
-      //   dispatchToStore({ type: "STARTED_WATCHING" });
-      //   expect(container.innerHTML).toContain(
-      //     "<p>You are now watching the session</p>"
-      //   );
-      // });
+      it("renders a message when watching has started", async () => {
+        const {store} = await import('../features/redux/store.js')
+        renderWithStore(<MenuButtons />, store);
+        await waitFor(()=>{store.dispatch(startedWatching())})
+        await waitFor(() => {
+          strictEqual(screen.getByText("You are now watching the session").tagName, "P");
+        })
+      });
     });
   });
 });
