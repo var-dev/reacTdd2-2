@@ -162,7 +162,8 @@ describe("MenuButtons", () => {
             send: () => { },
             onopen: () => {}, 
             onclose: () => {}, 
-            onmessage: (arg: {data:string})=>{void arg}
+            onmessage: (arg: {data:string})=>{void arg},
+            readyState: WebSocket.OPEN,
         } as SocketSpy;
         return socketSpy;
       });
@@ -170,8 +171,9 @@ describe("MenuButtons", () => {
 
     const notifySocketOpened = async () => {
       const data = JSON.stringify({ type: "UNKNOWN", id: 1 });
-      await waitFor(async () => {socketSpy.onopen();});
-      await waitFor(async () => {socketSpy.onmessage({ data });});
+      await waitFor(async () => {socketSpy.onopen()});
+      await waitFor(async () => {socketSpy.readyState = WebSocket.OPEN});
+      await waitFor(async () => {socketSpy.onmessage({ data })});
     };
 
     it("renders Start sharing by default", async () => {
@@ -212,6 +214,9 @@ describe("MenuButtons", () => {
       await waitFor(() => {
         strictEqual(store.getState().environment.isSharing, true, 'isSharing should be true')
         strictEqual(socketSpyFactory.mock.callCount(), 1, 'socketSpyFactory called')
+      })
+      await waitFor(() => {
+        strictEqual(store.getState().environment.isSharing, true, 'isSharing should be true')
       })
     });
     it("dispatches an action of STOP_SHARING when stop sharing is clicked", async () => {

@@ -1,5 +1,5 @@
 import type { Middleware, PayloadAction, } from "@reduxjs/toolkit";
-import { takeLatest, call, put, take } from "redux-saga/effects";
+import { takeLatest, call, put, take, takeEvery } from "redux-saga/effects";
 import type { EventChannel } from "redux-saga";
 import { eventChannel, END } from "redux-saga";
 import {
@@ -12,10 +12,13 @@ import {
   startedWatching,
   tryStopWatching,
   stoppedWatching,
+  wsSendRequested,
+  wsSendSucceeded,
+  wsSendFailed,
 } from "../environmentSlice.js";
 import { reset, submitEditLine } from "../scriptSlice.js";
 
-let presenterSocket: WebSocket;
+let presenterSocket: WebSocket | undefined;
 
 const openWebSocket = () => {
   const { host } = window.location;
@@ -37,16 +40,6 @@ const buildUrl = (id: number) => {
   const { protocol, host, pathname } = window.location;
   return `${protocol}//${host}${pathname}?watching=${id}`;
 };
-function* shareNewActionHandler(
-  action: PayloadAction<Record<string, unknown>>,
-) {
-  if (presenterSocket && presenterSocket.readyState === WebSocket.OPEN) {
-    yield call(
-      [presenterSocket, presenterSocket.send],
-      JSON.stringify(shareNewAction(action.payload)),
-    );
-  }
-}
 const webSocketListener = (socket: WebSocket): EventChannel<{ data: string }> =>
   eventChannel((emitter) => {
     socket.onmessage = emitter;
@@ -92,6 +85,7 @@ function* startWatching(): Generator {
 function* stopWatching() {}
 function* startSharing(): Generator {
   presenterSocket = yield call(openWebSocket);
+  if (presenterSocket?.readyState !== WebSocket.OPEN) return
   presenterSocket.send(JSON.stringify(requestStartSharing()));
   const message = yield call(receiveMessage, presenterSocket);
   const presenterSessionId = JSON.parse(message).id;
@@ -100,26 +94,47 @@ function* startSharing(): Generator {
 }
 
 function* stopSharing() {
-  if (Object.hasOwn(presenterSocket, "close")) {
+  if (presenterSocket) {
     presenterSocket.close();
+    presenterSocket = undefined;
     yield put(stoppedSharing());
   }
+}
+function* shareNewActionHandler(
+  action: PayloadAction<Record<string, unknown>>,
+) {
+  const payload = { wsMessage: JSON.stringify(shareNewAction(action.payload)) };
+  yield put(wsSendRequested(payload));
+  yield call(sendWsMessage, payload);
+}
+function* sendWsMessage(payload: { wsMessage: string }): Generator {
+  let serializableError: SerializableError
+  if (!presenterSocket || presenterSocket?.readyState !== WebSocket.OPEN) {
+    yield put(wsSendFailed({...payload, error: {message: "no socket"}}))
+    return
+  }
+  try {
+    yield call([presenterSocket, presenterSocket.send], payload.wsMessage)
+  } catch (error) {
+    serializableError = error instanceof Error
+      ? {name: error.name, message: error.message, stack: error.stack }
+      : {message: String(error)}
+    yield put(wsSendFailed({...payload, error: serializableError}))
+    return
+  }
+  yield put(wsSendSucceeded(payload))
 }
 export function* sharingSaga() {
   yield takeLatest(tryStartWatching.type, startWatching);
   yield takeLatest(tryStopWatching.type, stopWatching);
   yield takeLatest(requestStartSharing.type, startSharing);
   yield takeLatest(requestStopSharing.type, stopSharing);
-  yield takeLatest(shareNewAction.type, shareNewActionHandler);
+  yield takeEvery(shareNewAction.type, shareNewActionHandler);
 }
 
 export const duplicateForSharing: Middleware = (store) => (next) => (action) => {
   if (submitEditLine.match(action)) {
     store.dispatch(
-      //   {
-      //   type: "SHARE_NEW_ACTION",
-      //   innerAction: action,
-      // }
       shareNewAction(action)
     );
   }

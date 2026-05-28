@@ -51,6 +51,10 @@ export const shareNewAction = createAction<Record<string,unknown>>('environment/
 export const tryStartWatching = createAction<void>('environment/tryStartWatching')
 export const tryStopWatching = createAction<void>('environment/tryStopWatching')
 
+export const wsSendRequested = createAction<{wsMessage: string}>("environment/wsSendRequested");
+export const wsSendSucceeded = createAction<{wsMessage: string}>("environment/wsSendSucceeded");
+export const wsSendFailed = createAction<{wsMessage: string; error: SerializableError}>("environment/wsSendFailed");
+
 export const { 
   promptFocusRequest, 
   promptHasFocus,

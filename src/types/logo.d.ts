@@ -84,3 +84,10 @@ type Instruction = {
   isComplete?: boolean;
 };
 type Value = { get: (state: LogoState) => number }
+
+type SerializableError = 
+  {
+    name?: string; 
+    message: string; 
+    stack?: string;
+  }

@@ -2,7 +2,12 @@ import { it, describe, mock, beforeEach } from "node:test";
 import { dom } from '../../../../test/builders/domSetup.js'
 import { waitFor } from "@testing-library/react";
 import type { Store, store as StoreType } from "../store.js";
-import {requestStartSharing, requestStopSharing, shareNewAction, tryStartWatching } from "../environmentSlice.js";
+import {
+  requestStartSharing,
+  requestStopSharing,
+  shareNewAction,
+  tryStartWatching,
+} from "../environmentSlice.js";
 import { submitEditLine } from "../scriptSlice.js";
 import {  deepStrictEqual, strictEqual } from "assert";
 import { END } from "redux-saga";
@@ -254,9 +259,10 @@ describe("sharingSaga", () => {
     });
     it('duplicate actions', async () => {
       store.dispatch(submitEditLine("fd 10"));
-      await waitFor(() => strictEqual(actions.length, 2));
-      strictEqual(actions[0].type, submitEditLine.type, 'expect submitEditLine');
-      strictEqual(actions[1].type, shareNewAction.type, 'expect shareNewAction');
+      await waitFor(() =>{
+        strictEqual(actions[0].type, submitEditLine.type, 'expect submitEditLine');
+        strictEqual(actions[1].type, shareNewAction.type, 'expect shareNewAction');
+      })
     })
     it('calls ws.send stub with new action', async ()=>{
       store.dispatch(requestStartSharing())
@@ -281,6 +287,69 @@ describe("sharingSaga", () => {
         strictEqual(store.getState().script.turtle.y, 0);
         strictEqual(store.getState().script.turtle.angle, 0);
       });
+      await waitFor(() => {
+        deepStrictEqual(actions.map(({type})=>type), 
+        [
+          'environment/tryStartWatching',
+          'script/reset',
+          'environment/startedWatching',
+          'script/submitEditLine',
+          'environment/shareNewAction',
+          'environment/wsSendRequested',
+          'environment/wsSendSucceeded'
+        ], 
+        `actions.type list`)
+      });
     })
+    it('expects wsSendSucceeded after wsSendRequested', async ()=>{
+      store.dispatch(requestStartSharing())
+      await waitFor(() => {strictEqual(socketSpyFactory.mock.callCount(), 1, `socketSpyFactory callCount on requestStartSharing`)});
+      await waitFor(() => socketSpy.onopen());
+      await waitFor(() => socketSpy.onmessage({data: JSON.stringify({ type: "UNKNOWN", id: 123 })}));
+      await waitFor(() => {
+        strictEqual(store.getState().environment.isSharing, true, `isSharing`)
+        strictEqual(actions.length, 2, `actions.length`)
+        strictEqual(actions[0].type, 'environment/requestStartSharing', `action: environment/requestStartSharing`)
+        strictEqual(actions[1].type, 'environment/startedSharing', `action: environment/startedSharing`)
+      });
+
+      store.dispatch(shareNewAction(submitEditLine("fd 10")))
+      await waitFor(() => {
+        strictEqual(actions[2].type, 'environment/shareNewAction', `action: environment/shareNewAction`)
+      });
+      await waitFor(() => {
+        strictEqual(actions[3].type, 'environment/wsSendRequested', `action: environment/wsSendRequested`)
+      });
+      await waitFor(() => {
+        strictEqual(actions[4].type, 'environment/wsSendSucceeded', `action: environment/wsSendSucceeded`)
+      });
+    })
+    it('expects wsSendFailed after wsSendRequested', async ()=>{
+      sendSpy.mock.mockImplementationOnce(()=>{throw new Error('test error')},1);
+      store.dispatch(requestStartSharing())
+      await waitFor(() => {strictEqual(socketSpyFactory.mock.callCount(), 1, `socketSpyFactory callCount on requestStartSharing`)});
+      await waitFor(() => socketSpy.onopen());
+      await waitFor(() => socketSpy.onmessage({data: JSON.stringify({ type: "UNKNOWN", id: 123 })}));
+      await waitFor(() => {
+        strictEqual(store.getState().environment.isSharing, true, `isSharing`)
+        strictEqual(actions.length, 2, `actions.length`)
+        strictEqual(actions[0].type, 'environment/requestStartSharing', `action: environment/requestStartSharing`)
+        strictEqual(actions[1].type, 'environment/startedSharing', `action: environment/startedSharing`)
+      });
+
+      store.dispatch(shareNewAction(submitEditLine("fd 10")))
+      await waitFor(()=>{strictEqual(sendSpy.mock.callCount(), 2, 'sendSpy callCount')})
+      await waitFor(() => {
+        deepStrictEqual(actions.map(({type})=>type), 
+        [
+          'environment/requestStartSharing',
+          'environment/startedSharing',
+          'environment/shareNewAction',
+          'environment/wsSendRequested',
+          'environment/wsSendFailed'
+        ],
+        '')
+      })
+    }) 
   })
 });
