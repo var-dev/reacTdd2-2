@@ -16,7 +16,6 @@ window.cancelAnimationFrame = () => void 0;
 // @ts-expect-error none
 const mockTurtle = mock.fn(({ x, y, angle }: TurtleState) => <polygon id="Turtle" data-testid="Turtle" x={x} y={y} angle={angle}/>);
 // @ts-expect-error none
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mockStaticLines = mock.fn((...args: unknown[]) => <line id="StaticLines" data-testid="StaticLines" />);
 
 const fakeAnimatedLine = (props: AnimatedLineProps) => {

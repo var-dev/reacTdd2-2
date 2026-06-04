@@ -1,4 +1,4 @@
-import { createSlice, createAction, type PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, createAction, type PayloadAction, type UnknownAction } from "@reduxjs/toolkit";
 
 const environmentSlice = createSlice({
   name: "environment",
@@ -47,7 +47,7 @@ const environmentSlice = createSlice({
 
 export const requestStartSharing = createAction<void>('environment/requestStartSharing')
 export const requestStopSharing = createAction<void>('environment/requestStopSharing')
-export const shareNewAction = createAction<Record<string,unknown>>('environment/shareNewAction')
+export const shareNewAction = createAction<UnknownAction>('environment/shareNewAction')
 export const tryStartWatching = createAction<void>('environment/tryStartWatching')
 export const tryStopWatching = createAction<void>('environment/tryStopWatching')
 

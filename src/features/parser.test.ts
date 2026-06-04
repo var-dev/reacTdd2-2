@@ -516,7 +516,6 @@ describe("parseStatement", () => {
   });
 
   describe("tokenizing", () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let tokenSpy = mock.fn((...args: any[])=>{void(args); return {}});
 
     beforeEach(() => {
@@ -607,7 +606,6 @@ describe("parseStatement", () => {
         parsedTokens: [{ lineNumber: 123 }],
       } as unknown as LogoState);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ok(result.parsedTokens.some((parsedToken: any) =>
         parsedToken.type === "token" &&
         parsedToken.text === ";" &&

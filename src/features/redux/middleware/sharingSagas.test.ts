@@ -104,8 +104,8 @@ describe("sharingSaga", () => {
         socketSpy.onmessage({ data: JSON.stringify({ type: "UNKNOWN", id }) }),
       );
     };
+    const innerAction = {type: "test",  a: 123 }  as UnknownAction;
     it("forwards the same action on to the socket", async () => {
-      const innerAction = { a: 123 };
       await startSharing(987);
       store.dispatch(shareNewAction(innerAction));
       await waitFor(() => {
@@ -117,13 +117,12 @@ describe("sharingSaga", () => {
       });
     });
     it("does not forward if the socket is not set yet", async () => {
-      store.dispatch(shareNewAction({s:1}));
+      store.dispatch(shareNewAction(innerAction));
       await waitFor(() => {
         strictEqual(sendSpy.mock.callCount(), 0);
       });
     });
     it("does not forward if the socket has been closed", async () => {
-      const innerAction = { a: 123 };
       await startSharing(987);
       await waitFor(() => {
         strictEqual(sendSpy.mock.callCount(), 1, 'sendSpy first call');

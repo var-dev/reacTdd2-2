@@ -12,6 +12,7 @@ export const Prompt = () => {
   useEffect(() => {
     inputRef.current?.focus()
     if (promptFocusRequest) dispatch(promptHasFocus());
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [promptFocusRequest]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

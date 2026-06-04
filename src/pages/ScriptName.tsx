@@ -3,7 +3,7 @@ import { useAppSelector, useAppDispatch } from "../features/redux/hooks.js";
 import { submitScriptName } from "../features/redux/scriptSlice.js";
 import { promptFocusRequest } from "../features/redux/environmentSlice.js";
 
-const ifEnterKey = (e: React.KeyboardEvent<HTMLInputElement>, func: Function) => {
+const ifEnterKey = (e: React.KeyboardEvent<HTMLInputElement>, func: () => void) => {
   if (e.key === "Enter") {
     func();
   }

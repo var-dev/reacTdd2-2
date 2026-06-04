@@ -15,5 +15,6 @@ export const rotate = (state: LogoState, angleValue: Value): Partial<LogoState> 
       },
     ],
     turtle: { ...turtle, angle },
+    nextDrawCommandId,
   };
 };

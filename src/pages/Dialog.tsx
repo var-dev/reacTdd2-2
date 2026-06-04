@@ -1,8 +1,8 @@
 
 type DialogProps = {
   message: string,
-  buttons: any[],
-  onChoose: (id: number)=>any,
+  buttons: {id:string, text: string}[],
+  onChoose: (id: string)=>void,
   onClose: ()=>void,
 }
 export const Dialog = ({

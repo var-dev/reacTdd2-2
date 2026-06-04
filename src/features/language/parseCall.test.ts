@@ -7,8 +7,8 @@ describe("parseAndSaveStatement", () => {
   let state:LogoState;
 
   describe("completing an instruction", () => {
-    let parseTokenSpy: it.Mock<(...args:any[])=>{}>;
-    let performSpy: it.Mock<(...args:any[])=>{}>;
+    let parseTokenSpy: it.Mock<(...args:any[])=>void>;
+    let performSpy: it.Mock<(...args:any[])=>void>;
 
     beforeEach(() => {
       parseTokenSpy = mock.fn();

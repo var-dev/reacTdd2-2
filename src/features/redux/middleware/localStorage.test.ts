@@ -24,7 +24,7 @@ const createTestStore = (initialState: LogoState, middleware: any) =>
       getDefaultMiddleware().concat(middleware),
   });
 
-let parser = (await import("../../parser.js"))
+const parser = (await import("../../parser.js"))
 const parseTokens = mock.fn<typeof parser.parseTokens>((tokens: Token[], state: LogoState) => parser.parseTokens(tokens, state))
 mock.module("../../parser.js",{
   namedExports:        {
@@ -34,8 +34,8 @@ mock.module("../../parser.js",{
 })
 
 describe("localStorage", () => {
-  let getItemSpy = mock.fn() as it.Mock<(...args:any[])=>{}>;
-  let setItemSpy = mock.fn();
+  const getItemSpy = mock.fn() as it.Mock<(...args:any[])=>void>;
+  const setItemSpy = mock.fn();
   beforeEach(() => {
     mock.property<Window, keyof Window>(window, 'localStorage', {
       getItem: getItemSpy,

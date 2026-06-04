@@ -21,5 +21,5 @@ export const negate = (value: Value) => ({
   get: (state: LogoState) => -value.get(state),
 });
 
-export const isParameterReference = (v: any) =>
+export const isParameterReference = (v: unknown) =>
   typeof v === "string" && v.startsWith(":");

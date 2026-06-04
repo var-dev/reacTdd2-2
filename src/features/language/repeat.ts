@@ -5,12 +5,12 @@ import {
 } from "./values.js";
 import { performAll } from "./perform";
 
-const flatten = (array: any[]) =>
+const flatten = (array: Instruction[][]) =>
   array.reduce((flattened, latest) => [
     ...flattened,
     ...latest,
   ]);
-const duplicateArrayItems = (array: any, times: number) =>
+const duplicateArrayItems = (array: unknown, times: number) =>
   flatten(Array(times).fill(array));
 
 export const repeat: Command = {

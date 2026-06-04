@@ -1,4 +1,4 @@
-const changePen = (option: Record<string,any>) => (state: LogoState) => ({
+const changePen = (option: Record<string,unknown>) => (state: LogoState) => ({
   pen: { ...state.pen, ...option },
 });
 

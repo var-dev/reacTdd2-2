@@ -1,4 +1,4 @@
-import type { Middleware, PayloadAction, } from "@reduxjs/toolkit";
+import type { Middleware, PayloadAction, UnknownAction, } from "@reduxjs/toolkit";
 import { takeLatest, call, put, take, takeEvery } from "redux-saga/effects";
 import type { EventChannel } from "redux-saga";
 import { eventChannel, END } from "redux-saga";
@@ -101,7 +101,7 @@ function* stopSharing() {
   }
 }
 function* shareNewActionHandler(
-  action: PayloadAction<Record<string, unknown>>,
+  action: PayloadAction<UnknownAction>,
 ) {
   const payload = { wsMessage: JSON.stringify(shareNewAction(action.payload)) };
   yield put(wsSendRequested(payload));
